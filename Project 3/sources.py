@@ -9,7 +9,7 @@ import matplotlib.widgets
 class Player(FuncAnimation):
     """Matplotlib video player, adapted from code courtesy of Elan Ernest."""
     def __init__(self, fig, func, frames=None, start=0, init_func=None, fargs=None,
-                 save_count=None, pos=(0.125, 0.92), **kwargs):
+                 save_count=None, pos=(0.125, .95), **kwargs):
         self.min = 0
         self.scale = 1
         if isinstance(frames, int):
@@ -101,7 +101,7 @@ class Player(FuncAnimation):
         fax = divider.append_axes("right", size="80%", pad=0.03)
         ffax = divider.append_axes("right", size="80%", pad=0.03)
         ofax = divider.append_axes("right", size="100%", pad=0.03)
-        sliderax = divider.append_axes("right", size="400%", pad=0.05)
+        sliderax = divider.append_axes("right", size="500%", pad=0.05)
         self.button_oneback = matplotlib.widgets.Button(playerax, label='$\u29CF$')
         self.button_fastback = matplotlib.widgets.Button(fbax, label='$\u25C2\u25C2$')
         self.button_back = matplotlib.widgets.Button(bax, label='$\u25C0$')
