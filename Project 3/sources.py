@@ -24,7 +24,6 @@ class Player(FuncAnimation):
         self.step = self.scale
         self.fig = fig
         self.func = func
-        self.artists = self.func(self.i)
         self.setup(pos)
         FuncAnimation.__init__(self, self.fig, self.update, frames=self.play(),
                                init_func=init_func, fargs=fargs,
@@ -122,8 +121,7 @@ class Player(FuncAnimation):
 
     def set_pos(self, i):
         self.i = int(self.slider.val)
-        self.artists = self.func(self.i)
 
     def update(self, i):
         self.slider.set_val(i)
-        return self.artists
+        self.func(self.i)
