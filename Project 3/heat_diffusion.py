@@ -37,7 +37,7 @@ def analytical(x: np.ndarray, t, temp_0, temp_1, kappa):
 
 
 
-def derivative(temp=TEMP, dt=DT, kappa=KAPPA):
+def derivative(temp=TEMP, dt=DT, t=T, kappa=KAPPA):
     """
     Args:
         Current temperature at given time
@@ -52,10 +52,11 @@ def derivative(temp=TEMP, dt=DT, kappa=KAPPA):
 
 def produce_data(temp=TEMP, derivative=derivative, dt=DT, t=T):
     print("Working...")
-    temp_list = np.zeros(,dtype=float)
-    for i in T:
+    temp_list = np.zeros((len(t),len(temp)), dtype=float)
+    for i in range(len(t)):
+        temp_list[i]
         new_temp = euler(temp, dt, derivative)
-        temp = np.concatenate(temp, new_temp)
+        
     print("Finished creating data array.")
     return temp
 
