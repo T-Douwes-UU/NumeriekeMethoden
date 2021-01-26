@@ -121,7 +121,7 @@ class Player(FuncAnimation):
 
     def set_pos(self, i):
         self.i = int(self.slider.val)
+        self.func(self.i)
 
     def update(self, i):
         self.slider.set_val(i)
-        self.func(self.i)
