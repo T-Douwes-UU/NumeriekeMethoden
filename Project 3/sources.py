@@ -6,6 +6,53 @@ import mpl_toolkits.axes_grid1
 import matplotlib.widgets
 
 
+
+
+def euler(old_state, dt, derivatives):
+    """
+       old_state: numpy array giving the state of the pendulum at time t
+       dt: integration step
+       
+       Function that performs an integration step using the Euler algorithm
+       
+       Returns an np.array containing the new state (theta, omega)
+    """
+    new_state = old_state + derivatives(old_state) * dt
+    return new_state
+
+
+
+def runge_kutta(old_state, derivatives, t, dt):
+    """
+    Performs an integration step using the Runge-Kutta algorithm
+
+    Note that this method is defined in terms of a time variable t, but it works just as well for other
+    types of variables.
+        
+    Args:
+        old_state: NumPy array giving the state of the system variables at time t
+        derivatives: function that calculates the derivatives of the coordinates
+        t: starting time
+        dt: integration step
+
+    Returns:
+        A NumPy array containing the new state of the system variables at time t+dt
+    """
+    # We calculate the ks
+    k1 = dt * derivatives(old_state, t)
+    k2 = dt * derivatives(old_state + (0.5 * k1), t + 0.5 * dt)
+    k3 = dt * derivatives(old_state + (0.5 * k2), t + 0.5 * dt)
+    k4 = dt * derivatives(old_state + k3, t + dt)
+
+    # And consequently the new state of the system
+    new_state = old_state + (k1 + 2.*k2 + 2.*k3 + k4) / 6.
+
+    return new_state
+
+
+
+
+
 class Player(FuncAnimation):
     """Matplotlib video player, adapted from code courtesy of Elan Ernest."""
     def __init__(self, fig, func, frames=None, start=0, init_func=None, fargs=None,
