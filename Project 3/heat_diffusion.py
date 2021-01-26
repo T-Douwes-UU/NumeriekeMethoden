@@ -62,7 +62,7 @@ def euler_data(temp=TEMP, derivative=derivative, dt=DT, t=T):
         found using the Euler method.
     """
     print("Working...")
-    temp_list = np.zeros((len(t), len(temp)), dtype=float)
+    temp_list = np.empty((len(t), len(temp)), dtype=float)
     for i in range(len(t)):
         temp_list[i] = temp
         temp = euler(temp, dt, derivative)
