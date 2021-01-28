@@ -33,9 +33,6 @@ def analytical(x: np.ndarray, t, temp_0, temp_1, kappa):
     return temp_0 + (temp_1 - temp_0) * erfc(x / 2 / np.sqrt(kappa * t))
 
 
-
-
-
 def derivative(temp, dt=DT, dx=DX, kappa=KAPPA):
     """
     Args:
@@ -50,36 +47,51 @@ def derivative(temp, dt=DT, dx=DX, kappa=KAPPA):
     return np.pad(d_temp, 1, constant_values=(0, d_temp[-1]))
     
 
-def euler_data(temp=TEMP, derivative=derivative, dt=DT, t=T):
+def numerical_data(temp=TEMP, derivative=derivative, method=euler, dt=DT, t=T):
     """
     Args:
         temp: Current temperature at every spacial grid point.
         derivative: Double spacial derivative of the temperature.
+        method: Chosen numerical method.
         dt: Timestep size.
         t: Array containing all time steps.
     Return:
         A NumPy array containing the temperatures at every x step and every t step
-        found using the Euler method.
+        found using the chosen method method.
     """
     print("Working...")
     temp_list = np.empty((len(t), len(temp)), dtype=float)
-    for i in range(len(t)):
-        temp_list[i] = temp
-        temp = euler(temp, dt, derivative)
 
+
+    if method in (leap_frog, adams_bashforth):
+        temp_list[0:2,:] = kutta_begin(temp, dt, derivative)
+        temp = temp_list[1]
+        #t = t[1:]
+        
+        for i in range(len(t[:-2])):
+            temp = method(temp_list[i+1], temp_list[i], dt, derivative)
+            temp_list[i+2] = temp
+        
+    else:
+        for i in range(len(t)):    
+            temp_list[i] = temp
+            temp = method(temp, dt, derivative)
+        
     print("Finished creating data array.")
     return temp_list
 
-
-TEMP_euler = euler_data()
-
+TEMP_euler = numerical_data(method=euler)
+TEMP_RK = numerical_data(method=runge_kutta)
+TEMP_LEAP = numerical_data(method=leap_frog)
 
 def animate(x=X, t=T, length=LENGTH, temp_0=TEMP_0, temp_1=TEMP_1, kappa=KAPPA):
     """Returns a FuncAnimation object."""
     fig = plt.figure()
     ax = plt.axes(xlim=(0, length), ylim=(temp_0, temp_1))
-    anlytc, = ax.plot([], [], label='anlytical result')
     eul, = ax.plot([], [], label='euler method')
+    RK, = ax.plot([], [], label='Runge-Kutta method')
+    LEAP, = ax.plot([], [], label='Leap-Frog method')
+    anlytc, = ax.plot([], [], label='anlytical result', linestyle='dashed')
     plt.legend()
     ax.set_title("Heat diffusion in a half-infinite rod")
     ax.set_xlabel("$x$ (m)")
@@ -89,6 +101,8 @@ def animate(x=X, t=T, length=LENGTH, temp_0=TEMP_0, temp_1=TEMP_1, kappa=KAPPA):
         y = analytical(x, t[i], temp_0, temp_1, kappa)  # Calculate the analytical temperature
         anlytc.set_data(x, y)  # Update the plot
         eul.set_data(x, TEMP_euler[i])
+        RK.set_data(x, TEMP_RK[i])
+        LEAP.set_data(x, TEMP_LEAP[i])
         return anlytc,
     
     return sources.Player(fig, update, frames=len(T), interval=20)
@@ -96,3 +110,4 @@ def animate(x=X, t=T, length=LENGTH, temp_0=TEMP_0, temp_1=TEMP_1, kappa=KAPPA):
 
 if __name__ == '__main__':
     anim = animate()
+
