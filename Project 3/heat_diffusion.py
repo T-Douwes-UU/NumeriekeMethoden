@@ -1,4 +1,3 @@
-
 """Task 1: Heat diffusion"""
 import sources
 from sources import *
@@ -8,15 +7,15 @@ import matplotlib.pyplot as plt
 # from matplotlib.animation import FuncAnimation
 
 LENGTH = 5  # Length to plot (in metres), actual length is infinite
-DX = 0.1 # (metres)
-DT = 0.001 # (seconds)
-T = np.arange(DT, 2 + DT, DT) # NumPy array containing all discrete time steps
-X = np.arange(0, LENGTH + DX, DX) #NumPy array containing all discrete space steps
-TEMP_0 = 0 # Initial temperature of the rod
-TEMP_1 = 1 # The temperature at which the end of the rod is held at.
+DX = 0.1  # (metres)
+DT = 0.001  # (seconds)
+T = np.arange(DT, 2 + DT, DT)  # NumPy array containing all discrete time steps
+X = np.arange(0, LENGTH + DX, DX)  # NumPy array containing all discrete space steps
+TEMP_0 = 0  # Initial temperature of the rod
+TEMP_1 = 1  # The temperature at which the end of the rod is held at.
 TEMP = np.full(len(X), TEMP_0, float)
 TEMP[0] = TEMP_1
-KAPPA = 1. #The thermal diffusion constant
+KAPPA = 1.  # The thermal diffusion constant
 
 
 def analytical(x: np.ndarray, t, temp_0, temp_1, kappa):
@@ -33,12 +32,11 @@ def analytical(x: np.ndarray, t, temp_0, temp_1, kappa):
     return temp_0 + (temp_1 - temp_0) * erfc(x / 2 / np.sqrt(kappa * t))
 
 
-def derivative(temp, dt=DT, dx=DX, kappa=KAPPA):
+def temp_derivative(temp, dx=DX, kappa=KAPPA):
     """
     Args:
         temp: Current temperature at every spacial grid point.
-        dt: Timestep size
-        dx: Spacial step size
+        dx: Spacial step size.
         kappa: The thermal diffusion constant.
     Return:
         A NumPy array of the double derivative of temperature to space 
@@ -47,7 +45,7 @@ def derivative(temp, dt=DT, dx=DX, kappa=KAPPA):
     return np.pad(d_temp, 1, constant_values=(0, d_temp[-1]))
     
 
-def numerical_data(temp=TEMP, derivative=derivative, method=euler, dt=DT, t=T):
+def numerical_data(method, temp=TEMP, derivative=temp_derivative, dt=DT, t=T):
     """
     Args:
         temp: Current temperature at every spacial grid point.
@@ -60,29 +58,28 @@ def numerical_data(temp=TEMP, derivative=derivative, method=euler, dt=DT, t=T):
         found using the chosen method method.
     """
     print("Working...")
-    temp_list = np.empty((len(t), len(temp)), dtype=float)
-
+    data = np.empty((len(t), len(temp)), dtype=float)
 
     if method in (leap_frog, adams_bashforth):
-        temp_list[0:2,:] = kutta_begin(temp, dt, derivative)
-        temp = temp_list[1]
-        #t = t[1:]
-        
+        data[0] = temp
+        data[1] = euler(temp, dt, derivative)
+
         for i in range(len(t[:-2])):
-            temp = method(temp_list[i+1], temp_list[i], dt, derivative)
-            temp_list[i+2] = temp
-        
+            data[i+2] = method(data[i+1], data[i], dt, derivative)
+
     else:
         for i in range(len(t)):    
-            temp_list[i] = temp
+            data[i] = temp
             temp = method(temp, dt, derivative)
-        
+
     print("Finished creating data array.")
-    return temp_list
+    return data
+
 
 TEMP_euler = numerical_data(method=euler)
 TEMP_RK = numerical_data(method=runge_kutta)
 TEMP_LEAP = numerical_data(method=leap_frog)
+
 
 def animate(x=X, t=T, length=LENGTH, temp_0=TEMP_0, temp_1=TEMP_1, kappa=KAPPA):
     """Returns a FuncAnimation object."""
