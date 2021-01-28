@@ -61,6 +61,7 @@ def numerical_data(method, temp=TEMP, derivative=temp_derivative, dt=DT, t=T):
     data = np.empty((len(t), len(temp)), dtype=float)
 
     if method in (leap_frog, adams_bashforth):
+        data[0] = temp
         data[1] = euler(temp, dt, derivative)
 
         for i in range(len(t[:-2])):
