@@ -4,23 +4,19 @@ This file stores functions that are used across multiple tasks, in order of usag
 from matplotlib.animation import FuncAnimation
 import mpl_toolkits.axes_grid1
 import matplotlib.widgets
-import numpy as np
-
-
 
 
 def euler(old_state, dt, derivatives):
     """
-       old_state: numpy array giving the state at time t
-       dt: integration step
-       
-       Function that performs an integration step using the Euler algorithm
-       
-       Returns an np.array containing the new state at time t+dt
+    old_state: numpy array giving the state at time t
+    dt: integration step
+
+    Function that performs an integration step using the Euler algorithm
+
+    Returns an np.array containing the new state at time t+dt
     """
     new_state = old_state + derivatives(old_state) * dt
     return new_state
-
 
 
 def runge_kutta(old_state, dt, derivatives):
@@ -29,11 +25,10 @@ def runge_kutta(old_state, dt, derivatives):
 
     Note that this method is defined in terms of a time variable t, but it works just as well for other
     types of variables.
-        
+
     Args:
         old_state: NumPy array giving the state of the system variables at time t
         derivatives: function that calculates the derivatives of the coordinates
-        t: starting time
         dt: integration step
 
     Returns:
@@ -51,38 +46,6 @@ def runge_kutta(old_state, dt, derivatives):
     return new_state
 
 
-def euler_begin(state0, dt, derivatives):
-    """
-    Calculates the first timestep using Euler for numerical methods that can't
-    calculate the first timestep on their own.
-    
-    Args:
-        state0: NumPy array containing the starting state of the numerical problem.
-        dt: Integration step size
-        derivatives: The derivative of the system that will be needed in the Euler formula.
-    Return:
-        An NumPy array containing the initial state and the state after one timestep
-        calculated using Euler.
-    """
-    return np.array([state0,euler(state0, dt, derivatives)])
-    
-
-def kutta_begin(state0, dt, derivatives):
-    """
-    Calculates the first timestep using Runge-Kutta for numerical methods that can't
-    calculate the first timestep on their own.
-    
-    Args:
-        state0: NumPy array containing the starting state of the numerical problem.
-        dt: Integration step size
-        derivatives: The derivative of the system that will be needed in the Runge-Kutta formula.
-    Return:
-        An NumPy array containing the initial state and the state after one timestep
-        calculated using Runge-Kutta.
-    """
-    return np.array([state0,runge_kutta(state0, dt, derivatives)])
-
-
 def leap_frog(state1, state0, dt, derivatives):
     """
     Args:
@@ -94,13 +57,11 @@ def leap_frog(state1, state0, dt, derivatives):
         An NumPy array containing the new state at time t+dt
     """
     new_state = state0 + 2 * derivatives(state1) * dt
-    return new_state 
-    
+    return new_state
+
 
 def adams_bashforth(old_state, dt, derivatives):
-    return None 
-
-
+    pass
 
 
 class Player(FuncAnimation):
