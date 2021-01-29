@@ -19,7 +19,7 @@ KAPPA = 1.  # The thermal diffusion constant
 
 def analytical(x: np.ndarray, t, temp_0, temp_1, kappa):
     """Analytical solution for heat diffusion in a semi-infinite rod.
-    
+
     Args:
         x: An array of distances x from the endpoint of the rod.
         t: The current time.
@@ -34,7 +34,7 @@ def analytical(x: np.ndarray, t, temp_0, temp_1, kappa):
 
 def temp_derivative(temp, dx=DX, kappa=KAPPA):
     """Calculates the time derivative of temperature, using the second spatial derivative.
-    
+
     Args:
         temp: Current temperature at every spacial grid point.
         dx: Spacial step size.
@@ -44,11 +44,11 @@ def temp_derivative(temp, dx=DX, kappa=KAPPA):
     """
     d_temp = kappa * (temp[2:] - 2 * temp[1:-1] + temp[:-2]) / dx**2
     return np.pad(d_temp, 1, constant_values=(0, d_temp[-1]))
-    
+
 
 def numerical_data(method, temp=TEMP, derivative=temp_derivative, dt=DT, t=T, dx=DX, kappa=KAPPA):
     """Constructs a 2D array containing numerically obtained data using a specified method.
-    
+
     Args:
         temp: Current temperature at every spacial grid point.
         derivative: Double spacial derivative of the temperature.
@@ -59,6 +59,7 @@ def numerical_data(method, temp=TEMP, derivative=temp_derivative, dt=DT, t=T, dx
         kappa: Thermal diffusion constant.
     Returns:
         A 2D NumPy array containing the temperatures at every x step and every t step
+        found using the chosen method method.
     """
     print("Working...")
     data = np.empty((len(t), len(temp)), dtype=float)
@@ -67,11 +68,11 @@ def numerical_data(method, temp=TEMP, derivative=temp_derivative, dt=DT, t=T, dx
         data[0] = temp
         data[1] = sources.euler(temp, dt, derivative)
 
-        for i in range(len(t)-2):
+        for i in range(len(t) - 2):
             data[i+2] = method(data[i+1], data[i], dt, derivative)
     
     elif method == sources.crank_nicolson:
-        C = sources.crank_nicolson(temp, dt, derivative, kappa, dx)
+        C = sources.crank_nicolson(temp, dt, kappa, dx)
         for i in range(len(t)):
             data[i] = temp
             temp = C.dot(temp)
@@ -85,11 +86,11 @@ def numerical_data(method, temp=TEMP, derivative=temp_derivative, dt=DT, t=T, dx
     return data
 
 
-TEMP_euler = numerical_data(method=sources.euler)
-#TEMP_RK = numerical_data(method=sources.runge_kutta)
-#TEMP_LEAP = numerical_data(method=sources.leap_frog)
-#TEMP_ADAMS = numerical_data(method=sources.adams_bashforth)
-TEMP_CRANK = numerical_data(method=sources.crank_nicolson)
+TEMP_euler = numerical_data(sources.euler)
+#  TEMP_RK = numerical_data(sources.runge_kutta)
+#  TEMP_LEAP = numerical_data(sources.leap_frog)
+#  TEMP_ADAMS = numerical_data(sources.adams_bashforth)
+TEMP_CRANK = numerical_data(sources.crank_nicolson)
 
 
 def animate(x=X, t=T, length=LENGTH, temp_0=TEMP_0, temp_1=TEMP_1, kappa=KAPPA):
@@ -101,7 +102,7 @@ def animate(x=X, t=T, length=LENGTH, temp_0=TEMP_0, temp_1=TEMP_1, kappa=KAPPA):
     #  leap, = ax.plot([], [], label='Leap-Frog method')
     #  adams, = ax.plot([],[], label='Adams-Bashforth method')
     crank, = ax.plot([],[], label='Crank-Nicolson method')
-    anlytc, = ax.plot([], [], label='analytical result', linestyle='dashed')
+    anlytc, = ax.plot([], [], label='Analytical result', linestyle='dashed')
     plt.legend()
     ax.set_title("Heat diffusion in a half-infinite rod")
     ax.set_xlabel("$x$ (m)")
@@ -115,7 +116,6 @@ def animate(x=X, t=T, length=LENGTH, temp_0=TEMP_0, temp_1=TEMP_1, kappa=KAPPA):
         #  leap.set_data(x, TEMP_LEAP[i])
         #  adams.set_data(x, TEMP_ADAMS[i])
         crank.set_data(x, TEMP_CRANK[i])
-        return anlytc,
     
     return sources.Player(fig, update, frames=len(T), interval=20)
 
