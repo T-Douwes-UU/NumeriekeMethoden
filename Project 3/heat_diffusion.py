@@ -1,224 +1,123 @@
-"""
-This file stores functions that are used across multiple tasks, in order of usage.
-"""
-from matplotlib.animation import FuncAnimation
-import mpl_toolkits.axes_grid1
-import matplotlib.widgets
+"""Task 1: Heat diffusion"""
+import sources
+from sources import *
 import numpy as np
+from scipy.special import erfc
+import matplotlib.pyplot as plt
+# from matplotlib.animation import FuncAnimation
 
-def euler(old_state, dt, derivatives):
-    """
-    Function that performs an integration step using the Euler algorithm.
+LENGTH = 5  # Length to plot (in metres), actual length is infinite
+DX = 0.1  # (metres)
+DT = 0.001  # (seconds)
+T = np.arange(DT, 2 + DT, DT)  # NumPy array containing all discrete time steps
+X = np.arange(0, LENGTH + DX, DX)  # NumPy array containing all discrete space steps
+TEMP_0 = 0  # Initial temperature of the rod
+TEMP_1 = 1  # The temperature at which the end of the rod is held at.
+TEMP = np.full(len(X), TEMP_0, float)
+TEMP[0] = TEMP_1
+KAPPA = 1.  # The thermal diffusion constant
+
+
+def analytical(x: np.ndarray, t, temp_0, temp_1, kappa):
+    """Analytical solution for heat diffusion in a semi-infinite rod.
     Args:
-        old_state: NumPy array giving the state at time t
-        dt: Integration step
-    Return:
-        An np.array containing the new state at time t+dt
-    """
-    new_state = old_state + derivatives(old_state) * dt
-    return new_state
-
-
-def runge_kutta(old_state, dt, derivatives):
-    """
-    Performs an integration step using the Runge-Kutta algorithm.
-    Note that this method is defined in terms of a time variable t, but it works just as well for other
-    types of variables.
-    Args:
-        old_state: NumPy array giving the state of the system variables at time t
-        derivatives: function that calculates the derivatives of the coordinates
-        dt: integration step
+        x: An array of distances x from the endpoint of the rod.
+        t: The current time.
+        temp_0: The initial temperature of the rod.
+        temp_1: The temperature the end of the rod is held at.
+        kappa: The thermal diffusion constant.
     Returns:
-        A NumPy array containing the new state of the system variables at time t+dt
+        A NumPy array of current temperatures along the x axis.
     """
-    # We calculate the ks
-    k1 = dt * derivatives(old_state)
-    k2 = dt * derivatives(old_state + (0.5 * k1))
-    k3 = dt * derivatives(old_state + (0.5 * k2))
-    k4 = dt * derivatives(old_state + k3)
-
-    # And consequently the new state of the system
-    new_state = old_state + (k1 + 2.*k2 + 2.*k3 + k4) / 6.
-
-    return new_state
+    return temp_0 + (temp_1 - temp_0) * erfc(x / 2 / np.sqrt(kappa * t))
 
 
-def leap_frog(state1, state0, dt, derivatives):
+def temp_derivative(temp, dx=DX, kappa=KAPPA):
     """
-    Performs an integration step using the Leap-frog algorithm.
     Args:
-        state1: NumPy array giving the current state.
-        state0: NumPy array giving the previous state.
-        dt: Integration step size
-        derivatives: The derivative of the system that will be needed in the Leap-Frog formula.
+        temp: Current temperature at every spacial grid point.
+        dx: Spacial step size.
+        kappa: The thermal diffusion constant.
     Return:
-        An NumPy array containing the new state at time t+dt
+        A NumPy array of the double derivative of temperature to space 
     """
-    new_state = state0 + 2 * derivatives(state1) * dt
-    return new_state
-
-
-def adams_bashforth(state1, state0, dt, derivatives):
-    """
-    Performs an integration step using the Adams-Bashforth algorithm.
-    Args:
-        state1: NumPy array giving the current state.
-        state0: NumPy array giving the previous state.
-        dt: Integration step size
-        derivatives: The derivative of the system that will be needed in the adams_bashforth formula.
-    Return:
-        An NumPy array containing the new state at time t+dt
-    """
-    new_state = state1 + dt * (3 * derivatives(state1) / 2 - derivatives(state0) / 2)
-    return new_state
-
-
-def crank_nicolson(state, dt, derivatives, const, dx):
-    """
-    Produces the matrix needed to calculate an integration step using the
-    Crank-Nicolson method.
-    Args:
-        state: NumPy array giving the current state.
-        dt: Integration step size.
-        derivatives: The derivative of the system that will be needed in the Crank-Nicolson formula
-        const: The constant scalar value of the equation.
-        dx: Space step size between grid points.
-    Return:
-        An NumPy array containing the matrix needed for Crank-Nicolson integration
-    """
-    c = const * dt / (2 * dx**2)
-
-    A = np.zeros((len(state), len(state)))
-    A[0,0] = 1
-    A[-1, -3:] = (c, -2 * c, 1 + c)
-    B = np.zeros((len(state), len(state)))
-    B[0,0] = 1
-    B[-1, -3:] = (-c, 2 * c, 1 - c) 
-    for i in range(len(state)-2):
-        A[i+1, i:i+3] = (c, 1 - 2 * c, c)
-        B[i+1, i:i+3] = (-c, 1 + 2 * c, -c)
-    C = np.linalg.inv(A) @ B 
-    return C
+    d_temp = kappa * (temp[2:] - 2 * temp[1:-1] + temp[:-2]) / dx**2
+    return np.pad(d_temp, 1, constant_values=(0, d_temp[-1]))
     
 
+def numerical_data(method, temp=TEMP, derivative=temp_derivative, dt=DT, t=T, dx=DX, kappa=KAPPA):
+    """
+    Args:
+        temp: Current temperature at every spacial grid point.
+        derivative: Double spacial derivative of the temperature.
+        method: Chosen numerical method.
+        dt: Time step size.
+        t: Array containing all time steps.
+        dx: Spatial step size.
+        kappa: Thermal diffusion constant.
+    Return:
+        A NumPy array containing the temperatures at every x step and every t step
+        found using the chosen method method.
+    """
+    print("Working...")
+    data = np.empty((len(t), len(temp)), dtype=float)
+
+    if method in (leap_frog, adams_bashforth):
+        data[0] = temp
+        data[1] = euler(temp, dt, derivative)
+
+        for i in range(len(t[:-2])):
+            data[i+2] = method(data[i+1], data[i], dt, derivative)
+
+    elif method == crank_nicolson:
+        C = crank_nicolson(temp, dt, kappa, dx)
+        for i in range(len(t)):
+            data[i] = temp
+            temp = C.dot(temp)
+
+    else:
+        for i in range(len(t)):
+            data[i] = temp
+            temp = method(temp, dt, derivative)
+
+    print(f"Finished creating data array using {method}.")
+    return data
 
 
-class Player(FuncAnimation):
-    """Matplotlib video player, adapted from code courtesy of Elan Ernest."""
-    def __init__(self, fig, func, frames=None, start=0, init_func=None, fargs=None,
-                 save_count=None, pos=(0.125, .95), **kwargs):
-        self.min = 0
-        self.scale = 1
-        if isinstance(frames, int):
-            self.max = frames - 1
-        elif isinstance(frames, range):
-            self.min = frames.start
-            self.max = frames.stop - 1
-            self.scale = frames.step
-        else:
-            self.max = 100
-        self.i = start if self.min <= start <= self.max else self.min
-        self.step = self.scale
-        self.fig = fig
-        self.func = func
-        self.setup(pos)
-        FuncAnimation.__init__(self, self.fig, self.update, frames=self.play(),
-                               init_func=init_func, fargs=fargs,
-                               save_count=save_count, **kwargs)
+TEMP_euler = numerical_data(method=euler)
+# TEMP_RK = numerical_data(method=runge_kutta)
+# TEMP_LEAP = numerical_data(method=leap_frog)
+# TEMP_ADAMS = numerical_data(method=adams_bashforth)
+TEMP_CN = numerical_data(method=crank_nicolson)
 
-    def play(self):
-        while self.step:
-            self.i += self.step
-            if self.i < self.min:
-                self.i = self.max
-            elif self.i > self.max:
-                self.i = self.min
-            yield self.i
 
-    def start(self):
-        if not self.step:
-            self.event_source.start()
+def animate(x=X, t=T, length=LENGTH, temp_0=TEMP_0, temp_1=TEMP_1, kappa=KAPPA):
+    """Returns a FuncAnimation object."""
+    fig = plt.figure()
+    ax = plt.axes(xlim=(0, length), ylim=(temp_0, temp_1))
+    eul, = ax.plot([], [], label='euler method')
+    # rk, = ax.plot([], [], label='Runge-Kutta method')
+    # leap, = ax.plot([], [], label='Leap-Frog method')
+    # adams, = ax.plot([], [], label='Adams-Bashforth method')
+    crank, = ax.plot([], [], label='Crank-Nicolson method')
+    anlytc, = ax.plot([], [], label='Analytical result', linestyle='dashed')
+    plt.legend()
+    ax.set_title("Heat diffusion in a half-infinite rod")
+    ax.set_xlabel("$x$ (m)")
+    ax.set_ylabel("$T$ (${^\circ}$C)")
 
-    def stop(self, event=None):
-        if self.step:
-            self.step = 0
-            self.event_source.stop()
+    def update(i):
+        y = analytical(x, t[i], temp_0, temp_1, kappa)  # Calculate the analytical temperature
+        anlytc.set_data(x, y)  # Update the plot
+        eul.set_data(x, TEMP_euler[i])
+        # rk.set_data(x, TEMP_RK[i])
+        # leap.set_data(x, TEMP_LEAP[i])
+        # adams.set_data(x, TEMP_ADAMS[i])
+        crank.set_data(x, TEMP_CN[i])
+        return anlytc,
+    
+    return sources.Player(fig, update, frames=len(T), interval=20)
 
-    def forward(self, event=None):
-        if self.step > self.scale:
-            self.step //= 2
-        else:
-            self.start()
-            self.step = self.scale
 
-    def backward(self, event=None):
-        if self.step < -self.scale:
-            self.step //= 2
-        else:
-            self.start()
-            self.step = -self.scale
-
-    def fastforward(self, event=None):
-        if self.step > 0:
-            self.step *= 2
-        else:
-            self.start()
-            self.step = 2 * self.scale
-
-    def fastback(self, event=None):
-        if self.step < 0:
-            self.step *= 2
-        else:
-            self.start()
-            self.step = -2 * self.scale
-
-    def oneforward(self, event=None):
-        if self.i < self.max:
-            self.i += self.scale
-        self.onestep()
-
-    def onebackward(self, event=None):
-        if self.i > self.min:
-            self.i -= self.scale
-        self.onestep()
-
-    def onestep(self):
-        self.stop()
-        self.func(self.i)
-        self.slider.set_val(self.i)
-        self.fig.canvas.draw_idle()
-
-    def setup(self, pos):
-        playerax = self.fig.add_axes([pos[0], pos[1], 0.64, 0.04])
-        divider = mpl_toolkits.axes_grid1.make_axes_locatable(playerax)
-        fbax = divider.append_axes("right", size="80%", pad=0.03)
-        bax = divider.append_axes("right", size="80%", pad=0.03)
-        sax = divider.append_axes("right", size="80%", pad=0.03)
-        fax = divider.append_axes("right", size="80%", pad=0.03)
-        ffax = divider.append_axes("right", size="80%", pad=0.03)
-        ofax = divider.append_axes("right", size="100%", pad=0.03)
-        sliderax = divider.append_axes("right", size="500%", pad=0.05)
-        self.button_oneback = matplotlib.widgets.Button(playerax, label='$\u29CF$')
-        self.button_fastback = matplotlib.widgets.Button(fbax, label='$\u25C2\u25C2$')
-        self.button_back = matplotlib.widgets.Button(bax, label='$\u25C0$')
-        self.button_stop = matplotlib.widgets.Button(sax, label='$\u25A0$')
-        self.button_forward = matplotlib.widgets.Button(fax, label='$\u25B6$')
-        self.button_fastforward = matplotlib.widgets.Button(ffax, label='$\u25B8\u25B8$')
-        self.button_oneforward = matplotlib.widgets.Button(ofax, label='$\u29D0$')
-        self.button_oneback.on_clicked(self.onebackward)
-        self.button_fastback.on_clicked(self.fastback)
-        self.button_back.on_clicked(self.backward)
-        self.button_stop.on_clicked(self.stop)
-        self.button_forward.on_clicked(self.forward)
-        self.button_fastforward.on_clicked(self.fastforward)
-        self.button_oneforward.on_clicked(self.oneforward)
-        self.slider = matplotlib.widgets.Slider(sliderax, '',
-                                                self.min, self.max, valinit=self.i)
-        self.slider.on_changed(self.set_pos)
-
-    def set_pos(self, i):
-        self.i = int(self.slider.val)
-
-    def update(self, i):
-        self.slider.set_val(i)
-        self.func(self.i)
+if __name__ == '__main__':
+    anim = animate()

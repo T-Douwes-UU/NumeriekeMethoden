@@ -6,6 +6,7 @@ import mpl_toolkits.axes_grid1
 import matplotlib.widgets
 import numpy as np
 
+
 def euler(old_state, dt, derivatives):
     """
     Function that performs an integration step using the Euler algorithm.
