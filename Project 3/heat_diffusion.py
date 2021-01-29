@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 LENGTH = 5  # Length to plot (in metres), actual length is infinite
 DX = 0.1  # (metres)
-DT = 0.001  # (seconds)
+DT = 0.0001  # (seconds)
 T = np.arange(DT, 2 + DT, DT)  # NumPy array containing all discrete time steps
 X = np.arange(0, LENGTH + DX, DX)  # NumPy array containing all discrete space steps
 TEMP_0 = 0  # Initial temperature of the rod
@@ -61,7 +61,7 @@ def numerical_data(method, temp=TEMP, derivative=temp_derivative, dt=DT, t=T, dx
         A 2D NumPy array containing the temperatures at every x step and every t step
         found using the chosen method method.
     """
-    print("Working...")
+    print("Working...\r", end='')
     data = np.empty((len(t), len(temp)), dtype=float)
 
     if method in (sources.leap_frog, sources.adams_bashforth):
