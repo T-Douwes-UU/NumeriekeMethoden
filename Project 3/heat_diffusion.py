@@ -40,11 +40,11 @@ def temp_derivative(temp, dx=DX, kappa=KAPPA):
         dx: Spacial step size.
         kappa: The thermal diffusion constant.
     Returns:
-        A NumPy array of the derivative of temperature w.r.t. time at each x
+        A NumPy array of the derivative of temperature w.r.t. time at each x.
     """
     d_temp = kappa * (temp[2:] - 2 * temp[1:-1] + temp[:-2]) / dx**2
     return np.pad(d_temp, 1, constant_values=(0, d_temp[-1]))
-    
+
 
 def numerical_data(method, temp=TEMP, derivative=temp_derivative, dt=DT, t=T, dx=DX, kappa=KAPPA):
     """Constructs a 2D array containing numerically obtained data using a specified method.
@@ -87,10 +87,10 @@ def numerical_data(method, temp=TEMP, derivative=temp_derivative, dt=DT, t=T, dx
 
 
 TEMP_euler = numerical_data(sources.euler)
-# TEMP_RK = numerical_data(sources.runge_kutta)
-# TEMP_LEAP = numerical_data(sources.leap_frog)
-# TEMP_ADAMS = numerical_data(sources.adams_bashforth)
-TEMP_CN = numerical_data(sources.crank_nicolson)
+#  TEMP_RK = numerical_data(sources.runge_kutta)
+#  TEMP_LEAP = numerical_data(sources.leap_frog)
+#  TEMP_ADAMS = numerical_data(sources.adams_bashforth)
+TEMP_CRANK = numerical_data(sources.crank_nicolson)
 
 
 def animate(x=X, t=T, length=LENGTH, temp_0=TEMP_0, temp_1=TEMP_1, kappa=KAPPA):
@@ -98,9 +98,9 @@ def animate(x=X, t=T, length=LENGTH, temp_0=TEMP_0, temp_1=TEMP_1, kappa=KAPPA):
     fig = plt.figure()
     ax = plt.axes(xlim=(0, length), ylim=(temp_0, temp_1))
     eul, = ax.plot([], [], label='euler method')
-    # rk, = ax.plot([], [], label='Runge-Kutta method')
-    # leap, = ax.plot([], [], label='Leap-Frog method')
-    # adams, = ax.plot([], [], label='Adams-Bashforth method')
+    #  rk, = ax.plot([], [], label='Runge-Kutta method')
+    #  leap, = ax.plot([], [], label='Leap-Frog method')
+    #  adams, = ax.plot([], [], label='Adams-Bashforth method')
     crank, = ax.plot([], [], label='Crank-Nicolson method')
     anlytc, = ax.plot([], [], label='Analytical result', linestyle='dashed')
     plt.legend()
@@ -112,10 +112,10 @@ def animate(x=X, t=T, length=LENGTH, temp_0=TEMP_0, temp_1=TEMP_1, kappa=KAPPA):
         y = analytical(x, t[i], temp_0, temp_1, kappa)  # Calculate the analytical temperature
         anlytc.set_data(x, y)  # Update the plot
         eul.set_data(x, TEMP_euler[i])
-        # rk.set_data(x, TEMP_RK[i])
-        # leap.set_data(x, TEMP_LEAP[i])
-        # adams.set_data(x, TEMP_ADAMS[i])
-        crank.set_data(x, TEMP_CN[i])
+        #  rk.set_data(x, TEMP_RK[i])
+        #  leap.set_data(x, TEMP_LEAP[i])
+        #  adams.set_data(x, TEMP_ADAMS[i])
+        crank.set_data(x, TEMP_CRANK[i])
     
     return sources.Player(fig, update, frames=len(T), interval=20)
 

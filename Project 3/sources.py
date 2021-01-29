@@ -11,11 +11,11 @@ def euler(old_state, dt, derivatives):
     """Performs an integration step using the Euler algorithm.
 
     Args:
-        old_state: NumPy array giving the state at time t
-        dt: Integration step
-        derivatives: function that calculates the derivatives of the coordinates
+        old_state: NumPy array giving the state at time t.
+        dt: Integration step.
+        derivatives: function that calculates the derivatives of the coordinates.
     Returns:
-        An np.array containing the new state at time t+dt
+        An np.array containing the new state at time t+dt.
     """
     new_state = old_state + derivatives(old_state) * dt
     return new_state
@@ -25,11 +25,11 @@ def runge_kutta(old_state, dt, derivatives):
     """Performs an integration step using the Runge-Kutta algorithm.
 
     Args:
-        old_state: NumPy array giving the state of the system variables at time t
-        dt: integration step
-        derivatives: function that calculates the derivatives of the coordinates
+        old_state: NumPy array giving the state of the system variables at time t.
+        dt: integration step.
+        derivatives: function that calculates the derivatives of the coordinates.
     Returns:
-        A NumPy array containing the new state of the system variables at time t+dt
+        A NumPy array containing the new state of the system variables at time t+dt.
     """
     # We calculate the ks
     k1 = dt * derivatives(old_state)
@@ -49,10 +49,10 @@ def leap_frog(state1, state0, dt, derivatives):
     Args:
         state1: NumPy array giving the current state.
         state0: NumPy array giving the previous state.
-        dt: Integration step size
+        dt: Integration step size.
         derivatives: The derivative of the system that will be needed in the Leap-Frog formula.
     Returns:
-        An NumPy array containing the new state at time t+dt
+        An NumPy array containing the new state at time t+dt.
     """
     new_state = state0 + 2 * derivatives(state1) * dt
     return new_state
@@ -64,10 +64,10 @@ def adams_bashforth(state1, state0, dt, derivatives):
     Args:
         state1: NumPy array giving the current state.
         state0: NumPy array giving the previous state.
-        dt: Integration step size
+        dt: Integration step size.
         derivatives: The derivative of the system that will be needed in the adams_bashforth formula.
     Returns:
-        An NumPy array containing the new state at time t+dt
+        An NumPy array containing the new state at time t+dt.
     """
     new_state = state1 + dt * (3 * derivatives(state1) / 2 - derivatives(state0) / 2)
     return new_state
@@ -97,7 +97,7 @@ def crank_nicolson(state, dt, const, dx):
 
     A = i + array
     B = i - array
-    C = np.linalg.inv(A) @ B 
+    C = np.linalg.inv(A) @ B
     return C
 
 
