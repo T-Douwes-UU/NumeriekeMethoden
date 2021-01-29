@@ -116,7 +116,6 @@ def animate(x=X, t=T, length=LENGTH, temp_0=TEMP_0, temp_1=TEMP_1, kappa=KAPPA):
         # leap.set_data(x, TEMP_LEAP[i])
         # adams.set_data(x, TEMP_ADAMS[i])
         crank.set_data(x, TEMP_CN[i])
-        return anlytc,
     
     return sources.Player(fig, update, frames=len(T), interval=20)
 
