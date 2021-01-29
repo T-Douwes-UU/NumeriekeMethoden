@@ -8,13 +8,13 @@ import numpy as np
 
 
 def euler(old_state, dt, derivatives):
-    """
-    Function that performs an integration step using the Euler algorithm.
+    """Performs an integration step using the Euler algorithm.
+
     Args:
         old_state: NumPy array giving the state at time t
         dt: Integration step
         derivatives: function that calculates the derivatives of the coordinates
-    Return:
+    Returns:
         An np.array containing the new state at time t+dt
     """
     new_state = old_state + derivatives(old_state) * dt
@@ -22,10 +22,8 @@ def euler(old_state, dt, derivatives):
 
 
 def runge_kutta(old_state, dt, derivatives):
-    """
-    Performs an integration step using the Runge-Kutta algorithm.
-    Note that this method is defined in terms of a time variable t, but it works just as well for other
-    types of variables.
+    """Performs an integration step using the Runge-Kutta algorithm.
+
     Args:
         old_state: NumPy array giving the state of the system variables at time t
         dt: integration step
@@ -46,14 +44,14 @@ def runge_kutta(old_state, dt, derivatives):
 
 
 def leap_frog(state1, state0, dt, derivatives):
-    """
-    Performs an integration step using the Leap-frog algorithm.
+    """Performs an integration step using the Leap-frog algorithm.
+
     Args:
         state1: NumPy array giving the current state.
         state0: NumPy array giving the previous state.
         dt: Integration step size
         derivatives: The derivative of the system that will be needed in the Leap-Frog formula.
-    Return:
+    Returns:
         An NumPy array containing the new state at time t+dt
     """
     new_state = state0 + 2 * derivatives(state1) * dt
@@ -61,14 +59,14 @@ def leap_frog(state1, state0, dt, derivatives):
 
 
 def adams_bashforth(state1, state0, dt, derivatives):
-    """
-    Performs an integration step using the Adams-Bashforth algorithm.
+    """Performs an integration step using the Adams-Bashforth algorithm.
+
     Args:
         state1: NumPy array giving the current state.
         state0: NumPy array giving the previous state.
         dt: Integration step size
         derivatives: The derivative of the system that will be needed in the adams_bashforth formula.
-    Return:
+    Returns:
         An NumPy array containing the new state at time t+dt
     """
     new_state = state1 + dt * (3 * derivatives(state1) / 2 - derivatives(state0) / 2)
@@ -76,6 +74,16 @@ def adams_bashforth(state1, state0, dt, derivatives):
 
 
 def crank_nicolson(state, dt, const, dx):
+    """Constructs the matrix C used in the Crank-Nicolson integration method.
+
+    Args:
+        state: Array of values from which the length is extracted.
+        dt: Time step.
+        const: Constant coefficient in the PDE.
+        dx: Spatial step.
+    Returns:
+        A 2D NumPy array representing the matrix C.
+    """
     c = const * dt / (2 * dx**2)
     n = len(state)
     i = np.identity(n)
