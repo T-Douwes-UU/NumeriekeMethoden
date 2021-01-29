@@ -7,12 +7,13 @@ import matplotlib.widgets
 import numpy as np
 
 def euler(old_state, dt, derivatives):
-    """
-    Function that performs an integration step using the Euler algorithm.
+    """Performs an integration step using the Euler algorithm.
+    
     Args:
         old_state: NumPy array giving the state at time t
         dt: Integration step
-    Return:
+        derivatives: function that calculates the derivatives of the coordinates
+    Returns:
         An np.array containing the new state at time t+dt
     """
     new_state = old_state + derivatives(old_state) * dt
@@ -20,14 +21,12 @@ def euler(old_state, dt, derivatives):
 
 
 def runge_kutta(old_state, dt, derivatives):
-    """
-    Performs an integration step using the Runge-Kutta algorithm.
-    Note that this method is defined in terms of a time variable t, but it works just as well for other
-    types of variables.
+    """Performs an integration step using the Runge-Kutta algorithm.
+
     Args:
         old_state: NumPy array giving the state of the system variables at time t
-        derivatives: function that calculates the derivatives of the coordinates
         dt: integration step
+        derivatives: function that calculates the derivatives of the coordinates
     Returns:
         A NumPy array containing the new state of the system variables at time t+dt
     """
@@ -44,14 +43,14 @@ def runge_kutta(old_state, dt, derivatives):
 
 
 def leap_frog(state1, state0, dt, derivatives):
-    """
-    Performs an integration step using the Leap-frog algorithm.
+    """Performs an integration step using the Leap-frog algorithm.
+    
     Args:
         state1: NumPy array giving the current state.
         state0: NumPy array giving the previous state.
         dt: Integration step size
         derivatives: The derivative of the system that will be needed in the Leap-Frog formula.
-    Return:
+    Returns:
         An NumPy array containing the new state at time t+dt
     """
     new_state = state0 + 2 * derivatives(state1) * dt
@@ -59,47 +58,46 @@ def leap_frog(state1, state0, dt, derivatives):
 
 
 def adams_bashforth(state1, state0, dt, derivatives):
-    """
-    Performs an integration step using the Adams-Bashforth algorithm.
+    """Performs an integration step using the Adams-Bashforth algorithm.
+    
     Args:
         state1: NumPy array giving the current state.
         state0: NumPy array giving the previous state.
         dt: Integration step size
         derivatives: The derivative of the system that will be needed in the adams_bashforth formula.
-    Return:
+    Returns:
         An NumPy array containing the new state at time t+dt
     """
     new_state = state1 + dt * (3 * derivatives(state1) / 2 - derivatives(state0) / 2)
     return new_state
 
 
-def crank_nicolson(state, dt, derivatives, const, dx):
-    """
-    Produces the matrix needed to calculate an integration step using the
-    Crank-Nicolson method.
+def crank_nicolson(state, dt, const, dx):
+    """Constructs the matrix C used in the Crank-Nicolson integration method.
+
     Args:
-        state: NumPy array giving the current state.
-        dt: Integration step size.
-        derivatives: The derivative of the system that will be needed in the Crank-Nicolson formula
-        const: The constant scalar value of the equation.
-        dx: Space step size between grid points.
-    Return:
-        An NumPy array containing the matrix needed for Crank-Nicolson integration
+        state: Array of values from which the length is extracted.
+        dt: Time step
+        const: Constant coefficient in the PDE.
+        dx: Spatial step
+    Returns:
+        A 2D NumPy array representing the matrix C.
     """
     c = const * dt / (2 * dx**2)
+    n = len(state)
+    i = np.identity(n)
 
-    A = np.zeros((len(state), len(state)))
-    A[0,0] = 1
-    A[-1, -3:] = (c, -2 * c, 1 + c)
-    B = np.zeros((len(state), len(state)))
-    B[0,0] = 1
-    B[-1, -3:] = (-c, 2 * c, 1 - c) 
-    for i in range(len(state)-2):
-        A[i+1, i:i+3] = (c, 1 - 2 * c, c)
-        B[i+1, i:i+3] = (-c, 1 + 2 * c, -c)
-    C = np.linalg.inv(A) @ B 
-    return C
-    
+    # Construct A and B from diagonal matrices
+    arr1 = -2 * c * i
+    arr2 = c * np.eye(n, k=1)
+    array = arr1 + arr2 + arr2.T
+    array[0, :2] = 1, 0
+    array[-1, -3:] = (c, -2 * c, c)
+
+    A = i + array
+    B = i - array
+    C = np.linalg.inv(A).dot(B)
+    return(C)
 
 
 
@@ -218,7 +216,7 @@ class Player(FuncAnimation):
 
     def set_pos(self, i):
         self.i = int(self.slider.val)
+        self.func(self.i)
 
     def update(self, i):
         self.slider.set_val(i)
-        self.func(self.i)
