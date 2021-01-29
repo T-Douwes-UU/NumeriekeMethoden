@@ -32,11 +32,10 @@ def h_u_derivatives(h, u, zeta, dx=DX, beta=BETA, g=G):
     def dy_dx(var):
         return (var[2:] - var[:-2]) / dx
 
-    dh_dx = dy_dx(h)
     du_dx = dy_dx(u)
     dz_dx = dy_dx(zeta)
 
-    dh_dt = dh_dx * u + h * du_dx
+    dh_dt = dy_dx(h * u)
     du_dt = -du_dx * u - g * dz_dx - beta * u**3 / h
     return np.pad(dh_dt, 1, mode='edge'), np.pad(du_dt, 1)
 
