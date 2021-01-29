@@ -95,8 +95,8 @@ def crank_nicolson(state, dt, const, dx):
     array[0] = 0
     array[-1] = array[-2]
 
-    A = i + array
-    B = i - array
+    A = i - array
+    B = i + array
     C = np.linalg.inv(A) @ B
     return C
 
