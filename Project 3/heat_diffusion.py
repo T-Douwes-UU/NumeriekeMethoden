@@ -40,7 +40,7 @@ def temp_derivative(temp, dx=DX, kappa=KAPPA):
         dx: Spacial step size.
         kappa: The thermal diffusion constant.
     Returns:
-        A NumPy array of the derivative of temperature w.r.t. time at each x 
+        A NumPy array of the derivative of temperature w.r.t. time at each x.
     """
     d_temp = kappa * (temp[2:] - 2 * temp[1:-1] + temp[:-2]) / dx**2
     return np.pad(d_temp, 1, constant_values=(0, d_temp[-1]))
@@ -70,7 +70,7 @@ def numerical_data(method, temp=TEMP, derivative=temp_derivative, dt=DT, t=T, dx
 
         for i in range(len(t) - 2):
             data[i+2] = method(data[i+1], data[i], dt, derivative)
-    
+
     elif method == sources.crank_nicolson:
         C = sources.crank_nicolson(temp, dt, kappa, dx)
         for i in range(len(t)):
@@ -100,8 +100,8 @@ def animate(x=X, t=T, length=LENGTH, temp_0=TEMP_0, temp_1=TEMP_1, kappa=KAPPA):
     eul, = ax.plot([], [], label='euler method')
     #  rk, = ax.plot([], [], label='Runge-Kutta method')
     #  leap, = ax.plot([], [], label='Leap-Frog method')
-    #  adams, = ax.plot([],[], label='Adams-Bashforth method')
-    crank, = ax.plot([],[], label='Crank-Nicolson method')
+    #  adams, = ax.plot([], [], label='Adams-Bashforth method')
+    crank, = ax.plot([], [], label='Crank-Nicolson method')
     anlytc, = ax.plot([], [], label='Analytical result', linestyle='dashed')
     plt.legend()
     ax.set_title("Heat diffusion in a half-infinite rod")
