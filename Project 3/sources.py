@@ -6,7 +6,7 @@ import mpl_toolkits.axes_grid1
 import matplotlib.widgets
 import numpy as np
 
-def euler(old_state, dt, derivatives, *_):
+def euler(old_state, dt, derivatives):
     """
     Function that performs an integration step using the Euler algorithm.
     Args:
@@ -19,7 +19,7 @@ def euler(old_state, dt, derivatives, *_):
     return new_state
 
 
-def runge_kutta(old_state, dt, derivatives, *_):
+def runge_kutta(old_state, dt, derivatives):
     """
     Performs an integration step using the Runge-Kutta algorithm.
     Note that this method is defined in terms of a time variable t, but it works just as well for other
@@ -75,9 +75,7 @@ def adams_bashforth(state1, state0, dt, derivatives):
 
 def crank_nicolson(state, dt, derivatives, const, dx):
     c = const * dt / (2 * dx**2)
-    A1 = 
-    A2 = 
-    A3 = 
+
     A = np.zeros((len(state), len(state)))
     A[0,0] = 1
     A[-1, -3:] = (c, -2 * c, 1 + c)
