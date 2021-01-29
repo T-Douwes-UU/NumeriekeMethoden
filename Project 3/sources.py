@@ -12,6 +12,7 @@ def euler(old_state, dt, derivatives):
     Args:
         old_state: NumPy array giving the state at time t
         dt: Integration step
+        derivatives: function that calculates the derivatives of the coordinates
     Return:
         An np.array containing the new state at time t+dt
     """
@@ -26,8 +27,8 @@ def runge_kutta(old_state, dt, derivatives):
     types of variables.
     Args:
         old_state: NumPy array giving the state of the system variables at time t
-        derivatives: function that calculates the derivatives of the coordinates
         dt: integration step
+        derivatives: function that calculates the derivatives of the coordinates
     Returns:
         A NumPy array containing the new state of the system variables at time t+dt
     """
@@ -73,22 +74,22 @@ def adams_bashforth(state1, state0, dt, derivatives):
     return new_state
 
 
-def crank_nicolson(state, dt, derivatives, const, dx):
+def crank_nicolson(state, dt, const, dx):
     c = const * dt / (2 * dx**2)
+    n = len(state)
+    i = np.identity(n)
 
-    A = np.zeros((len(state), len(state)))
-    A[0,0] = 1
-    A[-1, -3:] = (c, -2 * c, 1 + c)
-    B = np.zeros((len(state), len(state)))
-    B[0,0] = 1
-    B[-1, -3:] = (-c, 2 * c, 1 - c) 
-    for i in range(len(state)-2):
-        A[i+1, i:i+3] = (c, 1 - 2 * c, c)
-        B[i+1, i:i+3] = (-c, 1 + 2 * c, -c)
+    # Construct A and B from diagonal matrices
+    arr1 = -2 * c * i
+    arr2 = c * np.eye(n, k=1)
+    array = arr1 + arr2 + arr2.T
+    array[0, :2] = 1, 0
+    array[-1, -3:] = (c, -2 * c, c)
+
+    A = i + array
+    B = i - array
     C = np.linalg.inv(A) @ B 
     return C
-    
-
 
 
 class Player(FuncAnimation):
