@@ -93,7 +93,7 @@ def crank_nicolson(state, dt, const, dx):
     arr2 = c * np.eye(n, k=1)
     array = arr1 + arr2 + arr2.T
     array[0] = 0
-    array[-1, -3:] = (c, -2 * c, c)
+    array[-1] = array[-2]
 
     A = i + array
     B = i - array
