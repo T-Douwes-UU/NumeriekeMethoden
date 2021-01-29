@@ -6,7 +6,7 @@ import mpl_toolkits.axes_grid1
 import matplotlib.widgets
 import numpy as np
 
-def euler(old_state, dt, derivatives, *_):
+def euler(old_state, dt, derivatives):
     """
     Function that performs an integration step using the Euler algorithm.
     Args:
@@ -20,7 +20,7 @@ def euler(old_state, dt, derivatives, *_):
     return new_state
 
 
-def runge_kutta(old_state, dt, derivatives, *_):
+def runge_kutta(old_state, dt, derivatives):
     """
     Performs an integration step using the Runge-Kutta algorithm.
     Note that this method is defined in terms of a time variable t, but it works just as well for other

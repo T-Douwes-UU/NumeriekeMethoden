@@ -45,7 +45,7 @@ def temp_derivative(temp, dx=DX, kappa=KAPPA):
     return np.pad(d_temp, 1, constant_values=(0, d_temp[-1]))
     
 
-def numerical_data(method, temp=TEMP, derivative=temp_derivative, dt=DT, t=T):
+def numerical_data(method, temp=TEMP, derivative=temp_derivative, dt=DT, t=T, dx=DX, const=KAPPA):
     """
     Args:
         temp: Current temperature at every spacial grid point.
@@ -66,19 +66,27 @@ def numerical_data(method, temp=TEMP, derivative=temp_derivative, dt=DT, t=T):
 
         for i in range(len(t[:-2])):
             data[i+2] = method(data[i+1], data[i], dt, derivative)
+    
+    elif method == crank_nicolson:
+        C = crank_nicolson(temp, dt, derivative, const, dx)
+        for i in range(len(t)):
+            data[i] = temp
+            temp = C @ temp
 
     else:
-        for i in range(len(t)):    
+        for i in range(len(t)):
             data[i] = temp
             temp = method(temp, dt, derivative)
 
-    print("Finished creating data array.")
+    print(f"Finished creating data array using {method}.")
     return data
 
 
 TEMP_euler = numerical_data(method=euler)
-TEMP_RK = numerical_data(method=runge_kutta)
-TEMP_LEAP = numerical_data(method=leap_frog)
+#TEMP_RK = numerical_data(method=runge_kutta)
+#TEMP_LEAP = numerical_data(method=leap_frog)
+#TEMP_ADAMS = numerical_data(method=adams_bashforth)
+TEMP_CN = numerical_data(method=crank_nicolson)
 
 
 def animate(x=X, t=T, length=LENGTH, temp_0=TEMP_0, temp_1=TEMP_1, kappa=KAPPA):
@@ -86,8 +94,10 @@ def animate(x=X, t=T, length=LENGTH, temp_0=TEMP_0, temp_1=TEMP_1, kappa=KAPPA):
     fig = plt.figure()
     ax = plt.axes(xlim=(0, length), ylim=(temp_0, temp_1))
     eul, = ax.plot([], [], label='euler method')
-    RK, = ax.plot([], [], label='Runge-Kutta method')
-    LEAP, = ax.plot([], [], label='Leap-Frog method')
+    #RK, = ax.plot([], [], label='Runge-Kutta method')
+    #LEAP, = ax.plot([], [], label='Leap-Frog method')
+    # ADAMS, = ax.plot([],[], label='Adams-Bashforth method')
+    CN, = ax.plot([],[], label='Crank-Nicolson method')
     anlytc, = ax.plot([], [], label='anlytical result', linestyle='dashed')
     plt.legend()
     ax.set_title("Heat diffusion in a half-infinite rod")
@@ -98,8 +108,10 @@ def animate(x=X, t=T, length=LENGTH, temp_0=TEMP_0, temp_1=TEMP_1, kappa=KAPPA):
         y = analytical(x, t[i], temp_0, temp_1, kappa)  # Calculate the analytical temperature
         anlytc.set_data(x, y)  # Update the plot
         eul.set_data(x, TEMP_euler[i])
-        RK.set_data(x, TEMP_RK[i])
-        LEAP.set_data(x, TEMP_LEAP[i])
+        #RK.set_data(x, TEMP_RK[i])
+        #LEAP.set_data(x, TEMP_LEAP[i])
+        #ADAMS.set_data(x, TEMP_ADAMS[i])
+        CN.set_data(x, TEMP_CN[i])
         return anlytc,
     
     return sources.Player(fig, update, frames=len(T), interval=20)
@@ -107,4 +119,3 @@ def animate(x=X, t=T, length=LENGTH, temp_0=TEMP_0, temp_1=TEMP_1, kappa=KAPPA):
 
 if __name__ == '__main__':
     anim = animate()
-
