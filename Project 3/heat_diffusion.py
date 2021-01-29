@@ -1,6 +1,5 @@
 """Task 1: Heat diffusion"""
 import sources
-from sources import *
 import numpy as np
 from scipy.special import erfc
 import matplotlib.pyplot as plt
@@ -62,15 +61,15 @@ def numerical_data(method, temp=TEMP, derivative=temp_derivative, dt=DT, t=T, dx
     print("Working...")
     data = np.empty((len(t), len(temp)), dtype=float)
 
-    if method in (leap_frog, adams_bashforth):
+    if method in (sources.leap_frog, sources.adams_bashforth):
         data[0] = temp
-        data[1] = euler(temp, dt, derivative)
+        data[1] = sources.euler(temp, dt, derivative)
 
         for i in range(len(t[:-2])):
             data[i+2] = method(data[i+1], data[i], dt, derivative)
 
-    elif method == crank_nicolson:
-        C = crank_nicolson(temp, dt, kappa, dx)
+    elif method == sources.crank_nicolson:
+        C = sources.crank_nicolson(temp, dt, kappa, dx)
         for i in range(len(t)):
             data[i] = temp
             temp = C.dot(temp)
@@ -84,11 +83,11 @@ def numerical_data(method, temp=TEMP, derivative=temp_derivative, dt=DT, t=T, dx
     return data
 
 
-TEMP_euler = numerical_data(method=euler)
-# TEMP_RK = numerical_data(method=runge_kutta)
-# TEMP_LEAP = numerical_data(method=leap_frog)
-# TEMP_ADAMS = numerical_data(method=adams_bashforth)
-TEMP_CN = numerical_data(method=crank_nicolson)
+TEMP_euler = numerical_data(sources.euler)
+# TEMP_RK = numerical_data(sources.runge_kutta)
+# TEMP_LEAP = numerical_data(sources.leap_frog)
+# TEMP_ADAMS = numerical_data(sources.adams_bashforth)
+TEMP_CN = numerical_data(sources.crank_nicolson)
 
 
 def animate(x=X, t=T, length=LENGTH, temp_0=TEMP_0, temp_1=TEMP_1, kappa=KAPPA):
