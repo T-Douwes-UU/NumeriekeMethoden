@@ -4,7 +4,6 @@ This file stores functions that are used across multiple tasks, in order of usag
 from matplotlib.animation import FuncAnimation
 import mpl_toolkits.axes_grid1
 import matplotlib.widgets
-import numpy as np
 
 
 def euler(old_state, dt, derivatives):
@@ -71,34 +70,6 @@ def adams_bashforth(state1, state0, dt, derivatives):
     """
     new_state = state1 + dt * (3 * derivatives(state1) / 2 - derivatives(state0) / 2)
     return new_state
-
-
-def crank_nicolson(state, dt, const, dx):
-    """Constructs the matrix C used in the Crank-Nicolson integration method.
-
-    Args:
-        state: Array of values from which the length is extracted.
-        dt: Time step.
-        const: Constant coefficient in the PDE.
-        dx: Spatial step.
-    Returns:
-        A 2D NumPy array representing the matrix C.
-    """
-    c = const * dt / (2 * dx**2)
-    n = len(state)
-    i = np.identity(n)
-
-    # Construct A and B from diagonal matrices
-    arr1 = -2 * c * i
-    arr2 = c * np.eye(n, k=1)
-    array = arr1 + arr2 + arr2.T
-    array[0] = 0
-    array[-1] = array[-2]
-
-    A = i - array
-    B = i + array
-    C = np.linalg.inv(A) @ B
-    return C
 
 
 class Player(FuncAnimation):
