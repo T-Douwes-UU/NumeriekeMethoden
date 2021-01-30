@@ -36,7 +36,8 @@ def molenkamp(x_t, width):
     Returns:
         A NumPy array of values of u along the x axis.
     """
-    return 2 * np.clip(x_t, 0, width - x_t) / width
+    peak = np.minimum(x_t, width - x_t)
+    return 2 * np.maximum(peak, 0) / width
 
 
 def u_derivative(u, dx=DX, c=CONST):
