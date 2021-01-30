@@ -28,11 +28,9 @@ def gaussian(x_t, half_length):
 
 def molenkamp(x_t, width):
     """Analytical Molenkamp solution for advection in one dimension.
-
     Args:
         x_t: Array consisting of x - t (mod L).
         width: Width of the triangle peak.
-
     Returns:
         A NumPy array of values of u along the x axis.
     """
@@ -143,11 +141,23 @@ def animate(length=LENGTH, width=WIDTH, x=X, t=T, const=CONST):
     #  t = np.arange(0.01, 10, 0.02)
 
     fig = plt.figure()
-    ax = plt.axes(xlim=(0, length), ylim=(0, 1.2))
-    gauss, = ax.plot([], [])
-    gauss_euler, = ax.plot([], [])
-    molen, = ax.plot([], [])
-    molen_euler, = ax.plot([], [])
+    ax = plt.axes(xlim=(0, length), ylim=(-0.2, 1.2))
+
+    #gauss_euler, = ax.plot([], [], label='Gaussian solution with Euler')
+    gauss_rk, = ax.plot([], [], label='Gaussian solution with Runge-Kutta')
+    #gauss_leap, = ax.plot([], [], label='Gaussian solution with Leap-frog')
+    gauss_adams, = ax.plot([], [], label='Gaussian solution with Adams-Bashforth')
+    #gauss_crank, = ax.plot([], [], label='Gaussian solution with Crank-Nicolson')
+    gauss, = ax.plot([], [], linestyle='--', label='Analytical Gaussian solution')
+
+    #molen_euler, = ax.plot([], [], label='Molenkamp solution with Euler')
+    molen_rk, = ax.plot([], [], label='Molenkamp solution with Runge-Kutta')
+    #molen_leap, = ax.plot([], [], label='Molenkamp solution with Leap-frog')
+    molen_adams, = ax.plot([], [], label='Molenkamp solution with Adams-Bashforth')
+    #molen_crank, = ax.plot([], [], label='Molenkamp solution with Crank-Nicolson')
+    molen, = ax.plot([], [], linestyle='--', label='Analytical Molenkamp solution')
+
+    plt.legend()
     ax.set_title("Advection in one dimension")
     ax.set_xlabel("$x$ (m)")
     ax.set_ylabel("$u$")
@@ -156,11 +166,22 @@ def animate(length=LENGTH, width=WIDTH, x=X, t=T, const=CONST):
 
     def update(i):
         x_t = (x - const * t[i]) % length  # Periodic domain
+
         gauss.set_data(x, gaussian(x_t, half_length))  # Update the plot
-        gauss_euler.set_data(x, DATA_GAUSS_EULER[i])
+        #gauss_euler.set_data(x, DATA_GAUSS_EULER[i])
+        gauss_rk.set_data(x, DATA_GAUSS_RK[i])
+        #gauss_leap.set_data(x, DATA_GAUSS_LEAP[i])
+        gauss_adams.set_data(x, DATA_GAUSS_ADAMS[i])
+        #gauss_crank.set_data(x, DATA_GAUSS_CRANK[i])
+
         molen.set_data(x, molenkamp(x_t, width))
-        molen_euler.set_data(x, DATA_MOLEN_EULER[i])
-        return gauss, gauss_euler, molen, molen_euler
+        #molen_euler.set_data(x, DATA_MOLEN_EULER[i])
+        molen_rk.set_data(x, DATA_MOLEN_RK[i])
+        #molen_leap.set_data(x, DATA_MOLEN_LEAP[i])
+        molen_adams.set_data(x, DATA_MOLEN_ADAMS[i])
+        #molen_crank.set_data(x, DATA_MOLEN_CRANK[i])
+
+        return gauss, gauss_rk, gauss_adams, molen, molen_rk, molen_adams
 
     return FuncAnimation(fig, update, frames=len(t), interval=20, blit=True)
 
