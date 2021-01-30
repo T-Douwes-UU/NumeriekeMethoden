@@ -7,7 +7,7 @@ from matplotlib.animation import FuncAnimation
 LENGTH = 10  # Length to plot, actual length is infinite
 WIDTH = 1  # Width of the Molenkamp solution 
 DX = 0.01
-DT = 0.01
+DT = 0.001
 X = np.arange(0, LENGTH + DX, DX)
 T = np.arange(DT, 10+DT, DT)
 CONST = 1  # traveling speed of variations in u.
@@ -39,8 +39,17 @@ def molenkamp(x_t, width):
     return 2 * np.clip(x_t, 0, width - x_t) / width
 
 
-def derivative(state, dx=DX, c=CONST):
-    return -c * (np.roll(state, -1) - np.roll(state, 1)) / (2 * dx)
+def u_derivative(u, dx=DX, c=CONST):
+    """Time derivative of u.
+    
+    Args:
+        u: Array containing the current displacement u at every point x.
+        dx: Spatial step size.
+        c: Propagation speed.
+    Returns:
+        A NumPy array containing values for du/dt for each point x.
+    """
+    return -c * (np.roll(u, -1) - np.roll(u, 1)) / (2 * dx)
 
 
 def crank_nicolson(state, dt=DT, const=CONST, dx=DX):
@@ -66,17 +75,15 @@ def crank_nicolson(state, dt=DT, const=CONST, dx=DX):
     
     A = i + array
     B = i - array
-    C = np.linalg.inv(A) @ (B)
+    C = np.linalg.inv(A) @ B
     return C
 
-STATE_GAUSS = np.zeros(len(X), dtype=float)
-STATE_MOLEN = np.zeros(len(X), dtype=float)
-for i in range(len(X)):
-    STATE_GAUSS[i] = gaussian(X[i], LENGTH/2)
-    STATE_MOLEN[i] = molenkamp(X[i], WIDTH)
+
+STATE_GAUSS = gaussian(X, LENGTH/2)
+STATE_MOLEN = molenkamp(X, WIDTH)
 
 
-def numerical_data(method, state=STATE_GAUSS, derivative=derivative, dt=DT, t=T, dx=DX, const=CONST):
+def numerical_data(method, state, derivative=u_derivative, dt=DT, t=T, dx=DX, const=CONST):
     """Constructs a 2D array containing numerically obtained data using a specified method.
 
     Args:
@@ -86,12 +93,12 @@ def numerical_data(method, state=STATE_GAUSS, derivative=derivative, dt=DT, t=T,
         dt: Time step size.
         t: Array containing all time steps.
         dx: Spatial step size.
-        c: traveling speed of variations in u.
+        const: traveling speed of variations in u.
     Returns:
         A 2D NumPy array containing the temperatures at every x step and every t step
         found using the chosen method method.
     """
-    print("Working...")
+    print("Working...\r", end='')
     data = np.empty((len(t), len(state)), dtype=float)
 
     if method in (sources.leap_frog, sources.adams_bashforth):
@@ -112,20 +119,22 @@ def numerical_data(method, state=STATE_GAUSS, derivative=derivative, dt=DT, t=T,
             data[i] = state
             state = method(state, dt, derivative)
 
-    print(f"Finished creating data array using {method}.")
+    print(f"Finished creating data array using {method.__name__}.")
     return data
 
-DATA_GAUSS_EULER = numerical_data(sources.euler)
-DATA_GAUSS_RK = numerical_data(sources.runge_kutta)
-DATA_GAUSS_LEAP = numerical_data(sources.leap_frog)
-DATA_GAUSS_ADAMS = numerical_data(sources.adams_bashforth)
-DATA_GAUSS_CRANK = numerical_data(crank_nicolson)
 
-DATA_MOLEN_EULER = numerical_data(sources.euler)
-DATA_MOLEN_RK = numerical_data(sources.runge_kutta)
-DATA_MOLEN_LEAP = numerical_data(sources.leap_frog)
-DATA_MOLEN_ADAMS = numerical_data(sources.adams_bashforth)
-DATA_MOLEN_CRANK = numerical_data(crank_nicolson)
+DATA_GAUSS_EULER = numerical_data(sources.euler, STATE_GAUSS)
+DATA_GAUSS_RK = numerical_data(sources.runge_kutta, STATE_GAUSS)
+DATA_GAUSS_LEAP = numerical_data(sources.leap_frog, STATE_GAUSS)
+DATA_GAUSS_ADAMS = numerical_data(sources.adams_bashforth, STATE_GAUSS)
+DATA_GAUSS_CRANK = numerical_data(crank_nicolson, STATE_GAUSS)
+
+DATA_MOLEN_EULER = numerical_data(sources.euler, STATE_MOLEN)
+DATA_MOLEN_RK = numerical_data(sources.runge_kutta, STATE_MOLEN)
+DATA_MOLEN_LEAP = numerical_data(sources.leap_frog, STATE_MOLEN)
+DATA_MOLEN_ADAMS = numerical_data(sources.adams_bashforth, STATE_MOLEN)
+DATA_MOLEN_CRANK = numerical_data(crank_nicolson, STATE_MOLEN)
+
 
 def animate(length=LENGTH, width=WIDTH, x=X, t=T, const=CONST):
     """Returns a FuncAnimation object."""
@@ -147,10 +156,10 @@ def animate(length=LENGTH, width=WIDTH, x=X, t=T, const=CONST):
     def update(i):
         x_t = (x - const * t[i]) % length  # Periodic domain
         gauss.set_data(x, gaussian(x_t, half_length))  # Update the plot
-        gauss_euler.set_data(x, DATA_GAUSS_EULER)
+        gauss_euler.set_data(x, DATA_GAUSS_EULER[i])
         molen.set_data(x, molenkamp(x_t, width))
-        molen_euler.set_data(x, DATA_MOLEN_EULER)
-        return gauss, molen
+        molen_euler.set_data(x, DATA_MOLEN_EULER[i])
+        return gauss, gauss_euler, molen, molen_euler
 
     return FuncAnimation(fig, update, frames=len(t), interval=20, blit=True)
 
