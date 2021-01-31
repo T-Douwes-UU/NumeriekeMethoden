@@ -10,14 +10,14 @@ DX = 0.01
 DT = 0.001
 X = np.arange(0, LENGTH + DX, DX)
 T = np.arange(DT, 10+DT, DT)
-CONST = 1  # traveling speed of variations in u.
+CONST = 0.5  # traveling speed of variations in u.
 
 
 def gaussian(x_t, half_length):
     """Analytical single gaussian solution for advection in one dimension.
 
     Args:
-        x_t: Array consisting of x - t (mod L).
+        x_t: Array consisting of x - c * t (mod L).
         half_length: Half of the length L of the periodic domain.
 
     Returns:
@@ -29,7 +29,7 @@ def gaussian(x_t, half_length):
 def molenkamp(x_t, width):
     """Analytical Molenkamp solution for advection in one dimension.
     Args:
-        x_t: Array consisting of x - t (mod L).
+        x_t: Array consisting of x - c * t (mod L).
         width: Width of the triangle peak.
     Returns:
         A NumPy array of values of u along the x axis.
@@ -78,8 +78,14 @@ def crank_nicolson(state, dt=DT, const=CONST, dx=DX):
     return C
 
 
-STATE_GAUSS = gaussian(X, LENGTH/2)
-STATE_MOLEN = molenkamp(X, WIDTH)
+
+def analytical_data(solution, t=T, x=X, length=LENGTH, width=WIDTH):
+    if solution == gaussian:
+        var = length/2
+    elif solution == molenkamp:
+        var = width
+    data = np.array([solution(x-i, var) for i in t])
+    return(data)
 
 
 def numerical_data(method, state, derivative=u_derivative, dt=DT, t=T, dx=DX, const=CONST):
@@ -121,18 +127,24 @@ def numerical_data(method, state, derivative=u_derivative, dt=DT, t=T, dx=DX, co
     print(f"Finished creating data array using {method.__name__}.")
     return data
 
+#  Creating Data arrays of the numerical solutions.
+DATA_GAUSS_ANLYTC = analytical_data(gaussian)
+DATA_MOLEN_ANLYTC = analytical_data(molenkamp)
 
-DATA_GAUSS_EULER = numerical_data(sources.euler, STATE_GAUSS)
-DATA_GAUSS_RK = numerical_data(sources.runge_kutta, STATE_GAUSS)
-DATA_GAUSS_LEAP = numerical_data(sources.leap_frog, STATE_GAUSS)
-DATA_GAUSS_ADAMS = numerical_data(sources.adams_bashforth, STATE_GAUSS)
-DATA_GAUSS_CRANK = numerical_data(crank_nicolson, STATE_GAUSS)
+#  Creating data arrays using numerical methods on the Gaussian solution.
+DATA_GAUSS_EULER = numerical_data(sources.euler, DATA_GAUSS_ANLYTC[0])
+DATA_GAUSS_RK = numerical_data(sources.runge_kutta, DATA_GAUSS_ANLYTC[0])
+DATA_GAUSS_LEAP = numerical_data(sources.leap_frog, DATA_GAUSS_ANLYTC[0])
+DATA_GAUSS_ADAMS = numerical_data(sources.adams_bashforth, DATA_GAUSS_ANLYTC[0])
+DATA_GAUSS_CRANK = numerical_data(crank_nicolson, DATA_GAUSS_ANLYTC[0])
 
-DATA_MOLEN_EULER = numerical_data(sources.euler, STATE_MOLEN)
-DATA_MOLEN_RK = numerical_data(sources.runge_kutta, STATE_MOLEN)
-DATA_MOLEN_LEAP = numerical_data(sources.leap_frog, STATE_MOLEN)
-DATA_MOLEN_ADAMS = numerical_data(sources.adams_bashforth, STATE_MOLEN)
-DATA_MOLEN_CRANK = numerical_data(crank_nicolson, STATE_MOLEN)
+#  Creating data arrays using numerical methods on the Molenkamp solution.
+DATA_MOLEN_EULER = numerical_data(sources.euler, DATA_MOLEN_ANLYTC[0])
+DATA_MOLEN_RK = numerical_data(sources.runge_kutta, DATA_MOLEN_ANLYTC[0])
+DATA_MOLEN_LEAP = numerical_data(sources.leap_frog, DATA_MOLEN_ANLYTC[0])
+DATA_MOLEN_ADAMS = numerical_data(sources.adams_bashforth, DATA_MOLEN_ANLYTC[0])
+DATA_MOLEN_CRANK = numerical_data(crank_nicolson, DATA_MOLEN_ANLYTC[0])
+
 
 
 def animate(length=LENGTH, width=WIDTH, x=X, t=T, const=CONST):
@@ -143,18 +155,18 @@ def animate(length=LENGTH, width=WIDTH, x=X, t=T, const=CONST):
     fig = plt.figure()
     ax = plt.axes(xlim=(0, length), ylim=(-0.2, 1.2))
 
-    #gauss_euler, = ax.plot([], [], label='Gaussian solution with Euler')
+    gauss_euler, = ax.plot([], [], label='Gaussian solution with Euler')
     gauss_rk, = ax.plot([], [], label='Gaussian solution with Runge-Kutta')
-    #gauss_leap, = ax.plot([], [], label='Gaussian solution with Leap-frog')
+    gauss_leap, = ax.plot([], [], label='Gaussian solution with Leap-frog')
     gauss_adams, = ax.plot([], [], label='Gaussian solution with Adams-Bashforth')
-    #gauss_crank, = ax.plot([], [], label='Gaussian solution with Crank-Nicolson')
+    gauss_crank, = ax.plot([], [], label='Gaussian solution with Crank-Nicolson')
     gauss, = ax.plot([], [], linestyle='--', label='Analytical Gaussian solution')
 
-    #molen_euler, = ax.plot([], [], label='Molenkamp solution with Euler')
+    molen_euler, = ax.plot([], [], label='Molenkamp solution with Euler')
     molen_rk, = ax.plot([], [], label='Molenkamp solution with Runge-Kutta')
-    #molen_leap, = ax.plot([], [], label='Molenkamp solution with Leap-frog')
+    molen_leap, = ax.plot([], [], label='Molenkamp solution with Leap-frog')
     molen_adams, = ax.plot([], [], label='Molenkamp solution with Adams-Bashforth')
-    #molen_crank, = ax.plot([], [], label='Molenkamp solution with Crank-Nicolson')
+    molen_crank, = ax.plot([], [], label='Molenkamp solution with Crank-Nicolson')
     molen, = ax.plot([], [], linestyle='--', label='Analytical Molenkamp solution')
 
     plt.legend()
@@ -168,20 +180,21 @@ def animate(length=LENGTH, width=WIDTH, x=X, t=T, const=CONST):
         x_t = (x - const * t[i]) % length  # Periodic domain
 
         gauss.set_data(x, gaussian(x_t, half_length))  # Update the plot
-        #gauss_euler.set_data(x, DATA_GAUSS_EULER[i])
+        gauss_euler.set_data(x, DATA_GAUSS_EULER[i])
         gauss_rk.set_data(x, DATA_GAUSS_RK[i])
-        #gauss_leap.set_data(x, DATA_GAUSS_LEAP[i])
+        gauss_leap.set_data(x, DATA_GAUSS_LEAP[i])
         gauss_adams.set_data(x, DATA_GAUSS_ADAMS[i])
-        #gauss_crank.set_data(x, DATA_GAUSS_CRANK[i])
+        gauss_crank.set_data(x, DATA_GAUSS_CRANK[i])
 
         molen.set_data(x, molenkamp(x_t, width))
-        #molen_euler.set_data(x, DATA_MOLEN_EULER[i])
+        molen_euler.set_data(x, DATA_MOLEN_EULER[i])
         molen_rk.set_data(x, DATA_MOLEN_RK[i])
-        #molen_leap.set_data(x, DATA_MOLEN_LEAP[i])
+        molen_leap.set_data(x, DATA_MOLEN_LEAP[i])
         molen_adams.set_data(x, DATA_MOLEN_ADAMS[i])
-        #molen_crank.set_data(x, DATA_MOLEN_CRANK[i])
+        molen_crank.set_data(x, DATA_MOLEN_CRANK[i])
 
-        return gauss, gauss_rk, gauss_adams, molen, molen_rk, molen_adams
+        return gauss, gauss_euler, gauss_rk, gauss_leap, gauss_adams, gauss_crank,\
+            molen, molen_euler, molen_rk, molen_leap, molen_adams, molen_crank
 
     return FuncAnimation(fig, update, frames=len(t), interval=20, blit=True)
 
