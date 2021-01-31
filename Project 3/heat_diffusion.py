@@ -46,6 +46,34 @@ def temp_derivative(temp, dx=DX, kappa=KAPPA):
     return np.pad(d_temp, 1, constant_values=(0, d_temp[-1]))
 
 
+def crank_nicolson(state, dt, const, dx):
+    """Constructs the matrix C used in the Crank-Nicolson integration method.
+
+    Args:
+        state: Array of values from which the length is extracted.
+        dt: Time step.
+        const: Constant coefficient in the PDE.
+        dx: Spatial step.
+    Returns:
+        A 2D NumPy array representing the matrix C.
+    """
+    c = const * dt / (2 * dx**2)
+    n = len(state)
+    i = np.identity(n)
+
+    # Construct A and B from diagonal matrices
+    arr1 = -2 * c * i
+    arr2 = c * np.eye(n, k=1)
+    array = arr1 + arr2 + arr2.T
+    array[0] = 0
+    array[-1] = array[-2]
+
+    A = i - array
+    B = i + array
+    C = np.linalg.inv(A) @ (B)
+    return C
+
+
 def numerical_data(method, temp=TEMP, derivative=temp_derivative, dt=DT, t=T, dx=DX, kappa=KAPPA):
     """Constructs a 2D array containing numerically obtained data using a specified method.
 
@@ -71,8 +99,8 @@ def numerical_data(method, temp=TEMP, derivative=temp_derivative, dt=DT, t=T, dx
         for i in range(len(t) - 2):
             data[i+2] = method(data[i+1], data[i], dt, derivative)
 
-    elif method == sources.crank_nicolson:
-        C = sources.crank_nicolson(temp, dt, kappa, dx)
+    elif method == crank_nicolson:
+        C = method(temp, dt, kappa, dx)
         for i in range(len(t)):
             data[i] = temp
             temp = C.dot(temp)
@@ -85,12 +113,35 @@ def numerical_data(method, temp=TEMP, derivative=temp_derivative, dt=DT, t=T, dx
     print(f"Finished creating data array using {method}.")
     return data
 
+DATA_anlytc = np.array([analytical(X, i, TEMP_0, TEMP_1, KAPPA) for i in T]) #  Calculate the analytical temperature in all time steps.
 
-TEMP_euler = numerical_data(sources.euler)
-#  TEMP_RK = numerical_data(sources.runge_kutta)
-#  TEMP_LEAP = numerical_data(sources.leap_frog)
-#  TEMP_ADAMS = numerical_data(sources.adams_bashforth)
-TEMP_CRANK = numerical_data(sources.crank_nicolson)
+# Calculate the temperatures using various numerical methods.
+DATA_euler = numerical_data(sources.euler)
+DATA_RK = numerical_data(sources.runge_kutta)
+DATA_LEAP = numerical_data(sources.leap_frog)
+DATA_ADAMS = numerical_data(sources.adams_bashforth)
+DATA_CRANK = numerical_data(crank_nicolson)
+
+# Calculate the <R^2> between the numerical methods and analytical solution.
+DEV_euler = np.mean((DATA_euler - DATA_anlytc)**2, axis=1)
+DEV_RK = np.mean((DATA_RK - DATA_anlytc)**2, axis=1)
+DEV_LEAP = np.mean((DATA_LEAP - DATA_anlytc)**2, axis=1)
+DEV_ADAMS = np.mean((DATA_ADAMS - DATA_anlytc)**2, axis=1)
+DEV_CRANK = np.mean((DATA_CRANK - DATA_anlytc)**2, axis=1)
+
+
+def deviation(x=X, t=T):
+    plt.figure()
+    plt.yscale('log')
+    plt.title("deviation numerical and analytical solution $<R^{2}>$")
+    plt.xlabel("$t$ (unit?)")
+    plt.ylabel("$<R^{2}>$")
+    plt.plot(t, DEV_euler, label='Euler method')
+    #plt.plot(t, DEV_RK, label='Runge-Kutta method')
+    #plt.plot(t, DEV_LEAP, label='Leap-frog method')
+    #plt.plot(t, DEV_ADAMS, label='Adams-Bashforth method')
+    #plt.plot(t, DEV_CRANK, label='Crank-Nicolson method')
+    plt.legend()
 
 
 def animate(x=X, t=T, length=LENGTH, temp_0=TEMP_0, temp_1=TEMP_1, kappa=KAPPA):
@@ -109,16 +160,17 @@ def animate(x=X, t=T, length=LENGTH, temp_0=TEMP_0, temp_1=TEMP_1, kappa=KAPPA):
     ax.set_ylabel("$T$ (${^\circ}$C)")
 
     def update(i):
-        y = analytical(x, t[i], temp_0, temp_1, kappa)  # Calculate the analytical temperature
-        anlytc.set_data(x, y)  # Update the plot
-        eul.set_data(x, TEMP_euler[i])
-        #  rk.set_data(x, TEMP_RK[i])
-        #  leap.set_data(x, TEMP_LEAP[i])
-        #  adams.set_data(x, TEMP_ADAMS[i])
-        crank.set_data(x, TEMP_CRANK[i])
+        anlytc.set_data(x, DATA_anlytc[i])  # Update the plot
+        eul.set_data(x, DATA_euler[i])
+        #  rk.set_data(x, DATA_RK[i])
+        #  leap.set_data(x, DATA_LEAP[i])
+        #  adams.set_data(x, DATA_ADAMS[i])
+        crank.set_data(x, DATA_CRANK[i])
     
     return sources.Player(fig, update, frames=len(T), interval=20)
 
 
 if __name__ == '__main__':
     anim = animate()
+
+deviation()
