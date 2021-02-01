@@ -138,16 +138,16 @@ def deviation(x=X, t=T):
     plt.title("deviation between numerical and analytical solution $<R^{2}>$")
     plt.xlabel("$t$ (s)")
     plt.ylabel("$<R^{2}>$")
-    #plt.plot(t, DEV_euler, label='Euler method')
-    #plt.plot(t, DEV_RK, label='Runge-Kutta method')
-    plt.plot(t, DEV_LEAP, label='Leap-frog method')
-    #plt.plot(t, DEV_ADAMS, label='Adams-Bashforth method')
-    #plt.plot(t, DEV_CRANK, label='Crank-Nicolson method')
+    plt.plot(t, DEV_euler, label='Euler method')
+    plt.plot(t, DEV_RK, label='Runge-Kutta method')
+    #plt.plot(t, DEV_LEAP, label='Leap-frog method')
+    plt.plot(t, DEV_ADAMS, label='Adams-Bashforth method')
+    plt.plot(t, DEV_CRANK, label='Crank-Nicolson method')
     plt.legend(loc='lower right', fontsize='small')
     plt.savefig(f"Deviation plot task 1 {timestamp}.png", dpi=300, bbox_inches='tight')
 
 
-def animate(x=X, t=T, length=LENGTH, temp_0=TEMP_0, temp_1=TEMP_1, kappa=KAPPA):
+def animate(x=X, t=T, length=LENGTH, temp_0=TEMP_0, temp_1=TEMP_1, kappa=KAPPA, beginframe=0):
     """Returns a FuncAnimation object."""
     fig = plt.figure()
     ax = plt.axes(xlim=(0, length), ylim=(temp_0, temp_1))
@@ -155,8 +155,8 @@ def animate(x=X, t=T, length=LENGTH, temp_0=TEMP_0, temp_1=TEMP_1, kappa=KAPPA):
     rk, = ax.plot([], [], label='Runge-Kutta method')
     leap, = ax.plot([], [], label='Leap-Frog method')
     adams, = ax.plot([], [], label='Adams-Bashforth method')
-    crank, = ax.plot([], [], label='Crank-Nicolson method')
-    anlytc, = ax.plot([], [], label='Analytical result', linestyle='dashed')
+    crank, = ax.plot([], [], c='violet', label='Crank-Nicolson method')
+    anlytc, = ax.plot([], [], c='cyan', linestyle=(0, (5, 2)), label='Analytical result')
     plt.legend()
     ax.set_title("Heat diffusion in a half-infinite rod")
     ax.set_xlabel("$x$ (m)")
@@ -173,8 +173,8 @@ def animate(x=X, t=T, length=LENGTH, temp_0=TEMP_0, temp_1=TEMP_1, kappa=KAPPA):
         #if i == 60: #specify here what frame you would like to save.
         #    fig.savefig(f'plot frame{i} of task1 {timestamp}.png', dpi=300, bbox_inches='tight')
 
-    return sources.Player(fig, update, frames=len(T), interval=20) #Interactive animation.
-    #return FuncAnimation(fig, update, frames=len(T), interval=20) #If you just want the plain animation, use this instead.
+    #return sources.Player(fig, update, frames=len(T), interval=20) #Interactive animation.
+    return FuncAnimation(fig, update, frames=range(beginframe,len(T)), interval=20) #If you just want the plain animation, use this instead.
 
 
 if __name__ == '__main__':
