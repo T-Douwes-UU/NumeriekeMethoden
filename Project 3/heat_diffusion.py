@@ -1,9 +1,10 @@
 """Task 1: Heat diffusion"""
 import sources
+from datetime import datetime
 import numpy as np
 from scipy.special import erfc
 import matplotlib.pyplot as plt
-# from matplotlib.animation import FuncAnimation
+from matplotlib.animation import FuncAnimation
 
 LENGTH = 5  # Length to plot (in metres), actual length is infinite
 DX = 0.1  # (metres)
@@ -15,7 +16,8 @@ TEMP_1 = 1  # The temperature at which the end of the rod is held at.
 TEMP = np.full(len(X), TEMP_0, float)
 TEMP[0] = TEMP_1
 KAPPA = 1.  # The thermal diffusion constant
-
+now = datetime.now()  # Get the current date and time
+timestamp = now.strftime("%Y-%m-%d_%H.%M.%S")
 
 def analytical(x: np.ndarray, t, temp_0, temp_1, kappa):
     """Analytical solution for heat diffusion in a semi-infinite rod.
@@ -133,15 +135,16 @@ DEV_CRANK = np.mean((DATA_CRANK - DATA_anlytc)**2, axis=1)
 def deviation(x=X, t=T):
     plt.figure()
     plt.yscale('log')
-    plt.title("deviation numerical and analytical solution $<R^{2}>$")
-    plt.xlabel("$t$ (unit?)")
+    plt.title("deviation between numerical and analytical solution $<R^{2}>$")
+    plt.xlabel("$t$ (s)")
     plt.ylabel("$<R^{2}>$")
-    plt.plot(t, DEV_euler, label='Euler method')
+    #plt.plot(t, DEV_euler, label='Euler method')
     #plt.plot(t, DEV_RK, label='Runge-Kutta method')
-    #plt.plot(t, DEV_LEAP, label='Leap-frog method')
+    plt.plot(t, DEV_LEAP, label='Leap-frog method')
     #plt.plot(t, DEV_ADAMS, label='Adams-Bashforth method')
     #plt.plot(t, DEV_CRANK, label='Crank-Nicolson method')
-    plt.legend()
+    plt.legend(loc='lower right', fontsize='small')
+    plt.savefig(f"Deviation plot task 1 {timestamp}.png", dpi=300, bbox_inches='tight')
 
 
 def animate(x=X, t=T, length=LENGTH, temp_0=TEMP_0, temp_1=TEMP_1, kappa=KAPPA):
@@ -149,9 +152,9 @@ def animate(x=X, t=T, length=LENGTH, temp_0=TEMP_0, temp_1=TEMP_1, kappa=KAPPA):
     fig = plt.figure()
     ax = plt.axes(xlim=(0, length), ylim=(temp_0, temp_1))
     eul, = ax.plot([], [], label='euler method')
-    #  rk, = ax.plot([], [], label='Runge-Kutta method')
-    #  leap, = ax.plot([], [], label='Leap-Frog method')
-    #  adams, = ax.plot([], [], label='Adams-Bashforth method')
+    rk, = ax.plot([], [], label='Runge-Kutta method')
+    leap, = ax.plot([], [], label='Leap-Frog method')
+    adams, = ax.plot([], [], label='Adams-Bashforth method')
     crank, = ax.plot([], [], label='Crank-Nicolson method')
     anlytc, = ax.plot([], [], label='Analytical result', linestyle='dashed')
     plt.legend()
@@ -162,12 +165,16 @@ def animate(x=X, t=T, length=LENGTH, temp_0=TEMP_0, temp_1=TEMP_1, kappa=KAPPA):
     def update(i):
         anlytc.set_data(x, DATA_anlytc[i])  # Update the plot
         eul.set_data(x, DATA_euler[i])
-        #  rk.set_data(x, DATA_RK[i])
-        #  leap.set_data(x, DATA_LEAP[i])
-        #  adams.set_data(x, DATA_ADAMS[i])
+        rk.set_data(x, DATA_RK[i])
+        leap.set_data(x, DATA_LEAP[i])
+        adams.set_data(x, DATA_ADAMS[i])
         crank.set_data(x, DATA_CRANK[i])
-    
-    return sources.Player(fig, update, frames=len(T), interval=20)
+        #if you want to make a screenshot of a specific frame you can uncomment the following lines:
+        #if i == 60: #specify here what frame you would like to save.
+        #    fig.savefig(f'plot frame{i} of task1 {timestamp}.png', dpi=300, bbox_inches='tight')
+
+    return sources.Player(fig, update, frames=len(T), interval=20) #Interactive animation.
+    #return FuncAnimation(fig, update, frames=len(T), interval=20) #If you just want the plain animation, use this instead.
 
 
 if __name__ == '__main__':
