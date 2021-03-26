@@ -15,9 +15,11 @@ TEMP_0 = 0  # Initial temperature of the rod
 TEMP_1 = 1  # The temperature at which the end of the rod is held at.
 TEMP = np.full(len(X), TEMP_0, float)
 TEMP[0] = TEMP_1
-KAPPA = 1.  # The thermal diffusion constant
+KAPPA = sources.set_value('Please enter the value for Kappa: ')  # The thermal diffusion constant
 now = datetime.now()  # Get the current date and time
 timestamp = now.strftime("%Y-%m-%d_%H.%M.%S")
+stability = KAPPA * DT / DX**2
+
 
 def analytical(x: np.ndarray, t, temp_0, temp_1, kappa):
     """Analytical solution for heat diffusion in a semi-infinite rod.
@@ -135,12 +137,12 @@ DEV_CRANK = np.mean((DATA_CRANK - DATA_anlytc)**2, axis=1)
 def deviation(x=X, t=T):
     plt.figure()
     plt.yscale('log')
-    plt.title("deviation between numerical and analytical solution $<R^{2}>$")
+    plt.title(rf"deviation between numerical and analytical solution $<R^{{2}}>$ with $(\frac{{\kappa \Delta t}}{{\Delta x^2}})$ = {stability:.3f}", wrap=True)
     plt.xlabel("$t$ (s)")
     plt.ylabel("$<R^{2}>$")
     plt.plot(t, DEV_euler, label='Euler method')
     plt.plot(t, DEV_RK, label='Runge-Kutta method')
-    #plt.plot(t, DEV_LEAP, label='Leap-frog method')
+    plt.plot(t, DEV_LEAP, label='Leap-frog method')
     plt.plot(t, DEV_ADAMS, label='Adams-Bashforth method')
     plt.plot(t, DEV_CRANK, label='Crank-Nicolson method')
     plt.legend(loc='lower right', fontsize='small')
@@ -158,7 +160,7 @@ def animate(x=X, t=T, length=LENGTH, temp_0=TEMP_0, temp_1=TEMP_1, kappa=KAPPA, 
     crank, = ax.plot([], [], c='violet', label='Crank-Nicolson method')
     anlytc, = ax.plot([], [], c='cyan', linestyle=(0, (5, 2)), label='Analytical result')
     plt.legend()
-    ax.set_title("Heat diffusion in a half-infinite rod")
+    ax.set_title(rf"Heat diffusion in a half-infinite rod with $(\frac{{\kappa \Delta t}}{{\Delta x^2}})$ = {stability:.3f}")
     ax.set_xlabel("$x$ (m)")
     ax.set_ylabel("$T$ (${^\circ}$C)")
 
@@ -173,8 +175,9 @@ def animate(x=X, t=T, length=LENGTH, temp_0=TEMP_0, temp_1=TEMP_1, kappa=KAPPA, 
         #if i == 60: #specify here what frame you would like to save.
         #    fig.savefig(f'plot frame{i} of task1 {timestamp}.png', dpi=300, bbox_inches='tight')
 
-    #return sources.Player(fig, update, frames=len(T), interval=20) #Interactive animation.
-    return FuncAnimation(fig, update, frames=range(beginframe,len(T)), interval=20) #If you just want the plain animation, use this instead.
+    return sources.Player(fig, update, frames=len(T), interval=20) #Interactive animation.
+    #If you just want the plain animation, use this instead of the sources.player function:
+    #return FuncAnimation(fig, update, frames=range(beginframe,len(T)), interval=20)
 
 
 if __name__ == '__main__':
