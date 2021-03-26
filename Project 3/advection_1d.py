@@ -9,11 +9,12 @@ LENGTH = 10  # Length to plot, actual length is infinite
 WIDTH = 1  # Width of the Molenkamp solution 
 DX = 0.01
 DT = 0.001
-X = np.arange(0, LENGTH + DX, DX)
+X = np.arange(0, LENGTH, DX)
 T = np.arange(DT, 10+DT, DT)
-CONST = 0.5  # traveling speed of variations in u.
+CONST = sources.set_value('Please enter the value for the traveling speed: ')  # traveling speed of variations in u.
 now = datetime.now()  # Get the current date and time
 timestamp = now.strftime("%Y-%m-%d_%H.%M.%S")
+stability = CONST * DT / DX
 
 def gaussian(x_t, half_length):
     """Analytical single gaussian solution for advection in one dimension.
@@ -194,9 +195,6 @@ def deviation(x=X, t=T):
 
 def animate(length=LENGTH, width=WIDTH, x=X, t=T, const=CONST, beginframe=0):
     """Returns a FuncAnimation object."""
-    #  x = np.arange(0, length, 0.01)
-    #  t = np.arange(0.01, 10, 0.02)
-
     fig = plt.figure()
     ax = plt.axes(xlim=(0, length), ylim=(-0.2, 1.2))
 
@@ -207,15 +205,15 @@ def animate(length=LENGTH, width=WIDTH, x=X, t=T, const=CONST, beginframe=0):
     gauss_crank, = ax.plot([], [], c='violet', label='Gaussian solution with Crank-Nicolson')
     gauss, = ax.plot([], [], c='lime', linestyle=(0, (5, 5)), label='Analytical Gaussian solution')
 
-    #molen_euler, = ax.plot([], [], label='Molenkamp solution with Euler')
-    #molen_rk, = ax.plot([], [], label='Molenkamp solution with Runge-Kutta')
-    #molen_leap, = ax.plot([], [], label='Molenkamp solution with Leap-frog')
-    #molen_adams, = ax.plot([], [], label='Molenkamp solution with Adams-Bashforth')
-    #molen_crank, = ax.plot([], [], c='violet', label='Molenkamp solution with Crank-Nicolson')
-    #molen, = ax.plot([], [], c='lime', linestyle=(0, (5, 5)), label='Analytical Molenkamp solution')
+    molen_euler, = ax.plot([], [], label='Molenkamp solution with Euler')
+    molen_rk, = ax.plot([], [], label='Molenkamp solution with Runge-Kutta')
+    molen_leap, = ax.plot([], [], label='Molenkamp solution with Leap-frog')
+    molen_adams, = ax.plot([], [], label='Molenkamp solution with Adams-Bashforth')
+    molen_crank, = ax.plot([], [], c='violet', label='Molenkamp solution with Crank-Nicolson')
+    molen, = ax.plot([], [], c='lime', linestyle=(0, (5, 5)), label='Analytical Molenkamp solution')
 
     plt.legend(loc='upper left', fontsize='small')
-    ax.set_title("Advection in one dimension")
+    ax.set_title(rf"Advection in one dimension with $\frac{{c\Delta t}}{{\Delta x}}$ = {stability}")
     ax.set_xlabel("$x$ (m)")
     ax.set_ylabel("$u$")
 
@@ -231,12 +229,12 @@ def animate(length=LENGTH, width=WIDTH, x=X, t=T, const=CONST, beginframe=0):
         gauss_adams.set_data(x, DATA_GAUSS_ADAMS[i])
         gauss_crank.set_data(x, DATA_GAUSS_CRANK[i])
 
-        #molen.set_data(x, molenkamp(x_t, width))
-        #molen_euler.set_data(x, DATA_MOLEN_EULER[i])
-        #molen_rk.set_data(x, DATA_MOLEN_RK[i])
-        #molen_leap.set_data(x, DATA_MOLEN_LEAP[i])
-        #molen_adams.set_data(x, DATA_MOLEN_ADAMS[i])
-        #molen_crank.set_data(x, DATA_MOLEN_CRANK[i])
+        molen.set_data(x, molenkamp(x_t, width))
+        molen_euler.set_data(x, DATA_MOLEN_EULER[i])
+        molen_rk.set_data(x, DATA_MOLEN_RK[i])
+        molen_leap.set_data(x, DATA_MOLEN_LEAP[i])
+        molen_adams.set_data(x, DATA_MOLEN_ADAMS[i])
+        molen_crank.set_data(x, DATA_MOLEN_CRANK[i])
         
         #if you want to make a screenshot of a specific frame you can uncomment the following lines:
         #if i == 3000: #specify here what frame you would like to save.
@@ -245,8 +243,9 @@ def animate(length=LENGTH, width=WIDTH, x=X, t=T, const=CONST, beginframe=0):
         return gauss, gauss_euler, gauss_rk, gauss_leap, gauss_adams, gauss_crank, \
             molen, molen_euler, molen_rk, molen_leap, molen_adams, molen_crank
 
-    #return sources.Player(fig, update, frames=len(t), interval=20) #Interactive animation for finding which frame you want.
-    return FuncAnimation(fig, update, frames=range(beginframe,len(t)), interval=20, blit=True)
+    return sources.Player(fig, update, frames=len(t), interval=20) #Interactive animation for finding which frame you want.
+    #If you just want the plain animation, use this instead of the sources.player function:    
+    #return FuncAnimation(fig, update, frames=range(beginframe,len(t)), interval=20, blit=True)
 
 
 if __name__ == '__main__':

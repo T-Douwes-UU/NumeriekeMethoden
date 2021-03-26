@@ -5,6 +5,22 @@ from matplotlib.animation import FuncAnimation
 import mpl_toolkits.axes_grid1
 import matplotlib.widgets
 
+def set_value(prompt):
+    """
+    Simple input function with error handling for non-number entries.
+
+    Args:
+        prompt: A string containing an input prompt.
+
+    Returns:
+        The number that is put in, as a float.
+    """
+    while True:
+        try:
+            value = float(input(prompt))
+            return value
+        except ValueError:
+            print("Not a number, please try again.")
 
 def euler(old_state, dt, derivatives):
     """Performs an integration step using the Euler algorithm.
